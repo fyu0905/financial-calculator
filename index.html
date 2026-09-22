@@ -836,7 +836,7 @@
     <section class="rail">
       <div class="panel">
         <h1>BA II Plus Simulator</h1>
-        <p class="small">Updated 22 September 2026 · 修正版 v5</p>
+        <p class="small">Updated 22 September 2026 · 修正版 v6</p>
         <p class="small">Companion to SUFE Corporate Finance, lectures 4–5. House rule: keep <b>P/Y = C/Y = 1</b>, type the <em>periodic</em> rate into I/Y (in percent), and let N be the number of periods. Cash outflows are negative.</p>
         <p class="small" style="margin-top:10px;">Start with <b>Example 0</b> (reset + P/Y = 1), then the present value, LiSi's loan, the monthly stream, the two remaining keys, and finally ZhangSan's car. <a class="source-link" href="https://education.ti.com/download/en/ed-tech/ADF11FB65B284B6195B0A7E9502784BA/5DC3E70F3C8040E499D704B583646E1D/BA_II_PLUS_EN.pdf">TI guidebook</a></p>
       </div>
@@ -3184,6 +3184,10 @@
 
     formatNumber(value, overrideDecimals, preserveDecimals) {
       if (!Number.isFinite(value)) return "";
+      // The BA II Plus has 13-digit numeric accuracy. Remove binary arithmetic
+      // noise before display rounding (e.g. 0.21 * 220 / 40 is 1.155, not 1.15).
+      // This is display-only: keep stored values and unfinished typed input intact.
+      if (!preserveDecimals) value = Number(value.toPrecision(13));
       const decimals = overrideDecimals ?? (this.settings.decimals === 9 ? null : this.settings.decimals);
       const abs = Math.abs(value);
       if (abs >= 1e10 || (abs > 0 && abs < 1e-9)) {
