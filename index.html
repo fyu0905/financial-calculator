@@ -1,0 +1,3815 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BA II Plus Teaching Simulator</title>
+  <script>
+    // Plain ES5 on purpose: if an old browser cannot parse the simulator script
+    // below, this handler still runs and says so instead of leaving a dead keypad.
+    window.addEventListener("error", function (event) {
+      var box = document.getElementById("startupError");
+      if (!box) {
+        box = document.createElement("div");
+        box.id = "startupError";
+        box.setAttribute("role", "alert");
+        box.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:1000;padding:12px 16px;background:#A83E44;color:#fff;font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;";
+        (document.body || document.documentElement).appendChild(box);
+      }
+      var msg = event && event.message ? String(event.message) : "unknown error";
+      box.textContent = "The simulator could not start in this browser. Open the downloaded file in a current Chrome, Edge, Safari or Firefox. \u6a21\u62df\u5668\u65e0\u6cd5\u5728\u6b64\u6d4f\u89c8\u5668\u4e2d\u542f\u52a8\uff0c\u8bf7\u4e0b\u8f7d\u540e\u7528\u65b0\u7248 Chrome\u3001Edge\u3001Safari \u6216 Firefox \u6253\u5f00\u3002 (" + msg + ")";
+    });
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      /* Surface */
+      --bg: #F6F4EF;
+      --surface: #FFFFFF;
+      --surface-2: #F2EFE8;
+      --border: rgba(20, 24, 28, 0.10);
+      --border-strong: rgba(20, 24, 28, 0.18);
+      /* Text */
+      --text: #131820;
+      --text-2: #5A6068;
+      --text-3: #8A8F97;
+      /* Accent */
+      --accent: #2F6F78;
+      --accent-strong: #245760;
+      --accent-soft: rgba(47, 111, 120, 0.10);
+      /* Calculator chassis & screen */
+      --chassis: #1B2024;
+      --chassis-edge: rgba(0, 0, 0, 0.45);
+      --screen-bg: #0E1418;
+      --screen-text: #E2DCC9;
+      --screen-dim: rgba(226, 220, 201, 0.22);
+      --screen-accent: #C9DFD3;
+      /* Key colors */
+      --k-fn: #2F6F78;
+      --k-fn-text: #FFFFFF;
+      --k-tvm: #D6A33C;
+      --k-tvm-text: #2A1F08;
+      --k-op: #C2545C;
+      --k-op-text: #FFFFFF;
+      --k-num: #FAF6EC;
+      --k-num-text: #2C2A24;
+      --k-num-border: rgba(20, 24, 28, 0.10);
+      --k-base: #2A3338;
+      --k-base-text: #ECEDED;
+      /* Effects */
+      --shadow-xs: 0 1px 1px rgba(20, 24, 28, 0.04);
+      --shadow-sm: 0 1px 2px rgba(20, 24, 28, 0.06);
+      --shadow-md: 0 4px 14px rgba(20, 24, 28, 0.08);
+      --shadow-lg: 0 18px 40px rgba(20, 24, 28, 0.10);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      /* Typography */
+      --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", "IBM Plex Mono", "SF Mono", "Menlo", "Consolas", ui-monospace, monospace;
+    }
+
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #0D1115;
+      --surface: #161B20;
+      --surface-2: #1E242B;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.18);
+      --text: #ECE7DD;
+      --text-2: #A2A8AF;
+      --text-3: #6B7178;
+      --accent: #67B4BB;
+      --accent-strong: #8AC8CD;
+      --accent-soft: rgba(103, 180, 187, 0.14);
+      --chassis: #050709;
+      --chassis-edge: rgba(0, 0, 0, 0.7);
+      --screen-bg: #060A0D;
+      --screen-text: #E2DCC9;
+      --screen-dim: rgba(226, 220, 201, 0.18);
+      --k-fn: #3E8C95;
+      --k-tvm: #C99634;
+      --k-tvm-text: #FFFFFF;
+      --k-op: #B84A52;
+      --k-num: #2A3138;
+      --k-num-text: #E5E0D2;
+      --k-num-border: rgba(255, 255, 255, 0.08);
+      --k-base: #1F262C;
+      --k-base-text: #D8D4C9;
+      --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.30);
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.40);
+      --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.50);
+      --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.55);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #0D1115;
+        --surface: #161B20;
+        --surface-2: #1E242B;
+        --border: rgba(255, 255, 255, 0.08);
+        --border-strong: rgba(255, 255, 255, 0.18);
+        --text: #ECE7DD;
+        --text-2: #A2A8AF;
+        --text-3: #6B7178;
+        --accent: #67B4BB;
+        --accent-strong: #8AC8CD;
+        --accent-soft: rgba(103, 180, 187, 0.14);
+        --chassis: #050709;
+        --chassis-edge: rgba(0, 0, 0, 0.7);
+        --screen-bg: #060A0D;
+        --screen-text: #E2DCC9;
+        --screen-dim: rgba(226, 220, 201, 0.18);
+        --k-fn: #3E8C95;
+        --k-tvm: #C99634;
+        --k-tvm-text: #FFFFFF;
+        --k-op: #B84A52;
+        --k-num: #2A3138;
+        --k-num-text: #E5E0D2;
+        --k-num-border: rgba(255, 255, 255, 0.08);
+        --k-base: #1F262C;
+        --k-base-text: #D8D4C9;
+        --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.30);
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.40);
+        --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.50);
+        --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.55);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: var(--bg);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      transition: background-color 200ms ease, color 200ms ease;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 50;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-2);
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      transition: background 150ms ease, color 150ms ease, border-color 150ms ease, transform 100ms ease;
+    }
+    .theme-toggle:hover { color: var(--text); border-color: var(--border-strong); }
+    .theme-toggle:active { transform: scale(0.95); }
+
+    .app {
+      width: min(1320px, calc(100vw - 32px));
+      margin: 0 auto;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(280px, 0.9fr) minmax(380px, 460px) minmax(280px, 0.9fr);
+      align-items: start;
+      gap: 24px;
+      padding: 32px 0;
+    }
+
+    .rail {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: sticky;
+      top: 32px;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: var(--shadow-xs);
+      padding: 18px;
+      border-radius: var(--radius-md);
+      transition: opacity 200ms ease, box-shadow 200ms ease, border-color 200ms ease, background 200ms ease;
+    }
+
+    .panel.is-dim {
+      opacity: 0.42;
+    }
+
+    .panel.is-active {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-md);
+    }
+
+    .panel h1 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+      color: var(--text-3);
+    }
+
+    .small {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--text-2);
+    }
+
+    .source-link {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid var(--accent-soft);
+      transition: border-color 150ms ease;
+    }
+    .source-link:hover { border-color: var(--accent); }
+
+    .hint {
+      margin: 0 0 12px;
+      padding: 2px 0 2px 12px;
+      border-left: 2px solid var(--accent);
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--text-2);
+    }
+
+    .hint b {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .formula {
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--text);
+    }
+
+    .formula code {
+      display: block;
+      font-family: var(--font-mono);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 6px 0;
+      color: var(--text);
+    }
+
+    .formula em {
+      color: var(--accent);
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    .values {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .value {
+      min-height: 44px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
+    }
+
+    .value b {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+      color: var(--text-3);
+    }
+
+    .value span {
+      display: block;
+      margin-top: 3px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .cash-list {
+      max-height: 220px;
+      overflow: auto;
+      display: grid;
+      gap: 4px;
+      padding-right: 4px;
+    }
+
+    .cash-row {
+      display: grid;
+      grid-template-columns: 58px 1fr 48px;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      font-variant-numeric: tabular-nums;
+      border-bottom: 1px solid var(--border);
+      padding: 4px 0 6px;
+      color: var(--text);
+    }
+    .cash-row b {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text-3);
+    }
+
+    .example-cards {
+      display: grid;
+      gap: 8px;
+    }
+
+    .example-section {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted, #7A8090);
+      margin: 6px 0 -2px;
+      font-weight: 600;
+    }
+    .practice-problem { font-size: 13px; line-height: 1.45; }
+    .practice-feedback {
+      font-size: 12.5px;
+      line-height: 1.45;
+      border-left: 3px solid var(--border);
+      padding: 4px 8px;
+      white-space: pre-line;
+    }
+    .practice-feedback.ok { border-left-color: #3F7A4E; }
+    .practice-feedback.bad { border-left-color: #A83E44; }
+    .practice-feedback[hidden] { display: none; }
+    .py-badge {
+      display: inline-block;
+      margin-left: auto;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      background: rgba(214, 163, 60, 0.22);
+      color: #8A5A0A;
+      border: 1px solid rgba(214, 163, 60, 0.6);
+    }
+    :root[data-theme="dark"] .py-badge { color: #E3B463; }
+    .py-badge[hidden] { display: none; }
+    .example-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      padding: 12px 14px;
+      display: grid;
+      gap: 6px;
+      transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .example-card.is-running {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-md);
+    }
+
+    .example-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.005em;
+    }
+
+    .example-note {
+      font-size: 12.5px;
+      color: var(--text-2);
+      line-height: 1.5;
+      min-height: 1.5em;
+    }
+    .example-note b { color: var(--text); font-weight: 600; }
+
+    .example-progress {
+      font-size: 11px;
+      color: var(--text-3);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+    }
+
+    .example-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    .example-actions button {
+      flex: 1 1 auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-2);
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+    }
+    .example-actions button:hover { background: var(--surface-2); color: var(--text); }
+    .example-actions button[data-action="step"] {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .example-actions button[data-action="step"]:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+    .example-actions button:disabled { opacity: 0.4; cursor: default; }
+
+    .key-tape {
+      min-height: 64px;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 4px;
+    }
+
+    .key-chip {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface-2);
+      padding: 3px 7px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-2);
+    }
+
+    .mode-hint {
+      margin-top: 10px;
+      min-height: 36px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--text-2);
+    }
+
+    .calculator-wrap {
+      display: flex;
+      justify-content: center;
+    }
+
+    .calculator {
+      width: min(100%, 440px);
+      padding: 22px 20px 24px;
+      border: 1px solid var(--chassis-edge);
+      border-radius: var(--radius-lg);
+      background: var(--chassis);
+      box-shadow: var(--shadow-lg);
+      position: relative;
+    }
+
+    .brand {
+      height: 30px;
+      color: rgba(255, 255, 255, 0.72);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .brand .model {
+      font-size: 11px;
+      letter-spacing: 0.20em;
+      font-weight: 600;
+    }
+
+    .brand .maker {
+      font-size: 8px;
+      letter-spacing: 0.16em;
+      color: rgba(255, 255, 255, 0.40);
+      font-weight: 400;
+    }
+
+    .screen-bezel {
+      padding: 0;
+      border-radius: var(--radius-md);
+      background: transparent;
+      margin-bottom: 18px;
+    }
+
+    .screen {
+      min-height: 108px;
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      background: var(--screen-bg);
+      color: var(--screen-text);
+      font-family: var(--font-mono);
+      border: 1px solid rgba(0, 0, 0, 0.5);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 4px;
+    }
+
+    .indicators {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 7px;
+      align-items: center;
+      font-size: 8.5px;
+      min-width: 0;
+      white-space: nowrap;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      font-weight: 600;
+      font-family: var(--font-sans);
+    }
+
+    .indicator {
+      flex-shrink: 0;
+      color: var(--screen-dim);
+      transition: color 100ms ease;
+    }
+
+    .indicator.on {
+      color: var(--screen-accent);
+    }
+
+    .display-row {
+      display: grid;
+      grid-template-columns: minmax(60px, auto) 1fr;
+      gap: 10px;
+      align-items: baseline;
+      min-width: 0;
+    }
+
+    .display-label {
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--screen-text);
+      opacity: 0.85;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .display-main {
+      text-align: right;
+      font-size: clamp(28px, 7vw, 38px);
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: -0.01em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .status-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 9.5px;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--screen-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      font-family: var(--font-sans);
+      font-weight: 500;
+    }
+
+    .keyboard {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      column-gap: 7px;
+      row-gap: 19px;
+      padding-top: 14px;
+    }
+
+    .key {
+      position: relative;
+      min-height: 40px;
+      border: 1px solid rgba(0, 0, 0, 0.30);
+      border-radius: var(--radius-sm);
+      color: var(--k-base-text);
+      background: var(--k-base);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      box-shadow: var(--shadow-xs), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      transition: transform 70ms ease, background 120ms ease, box-shadow 120ms ease;
+    }
+
+    .key::before {
+      content: attr(data-second);
+      position: absolute;
+      left: -2px;
+      right: -2px;
+      bottom: calc(100% + 4px);
+      text-align: center;
+      font-size: 9px;
+      line-height: 1.05;
+      color: rgba(255, 220, 180, 0.62);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+      pointer-events: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 120ms ease;
+    }
+
+    .key.second-active::before {
+      color: rgba(255, 220, 180, 1);
+    }
+
+    .key:hover {
+      filter: brightness(1.06);
+    }
+
+    .key:active,
+    .key.is-pressed {
+      transform: translateY(1px);
+      box-shadow: none;
+    }
+
+    .key .second { display: none; }
+
+    .key .primary {
+      font-family: var(--font-sans);
+      font-size: 14.5px;
+      font-weight: 600;
+      line-height: 1;
+      letter-spacing: 0;
+      text-align: center;
+    }
+
+    .key .primary.icon {
+      font-size: 18px;
+      font-weight: 400;
+    }
+
+    .key.wide-label .primary { font-size: 11.5px; letter-spacing: 0.02em; }
+
+    .key.second-active {
+      outline: 1.5px solid var(--k-tvm);
+      outline-offset: 1px;
+    }
+
+    .key:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    /* Function (accent) keys — orange/teal depending on theme */
+    .key[data-key="CPT"],
+    .key[data-key="ENTER"],
+    .key[data-key="UP"],
+    .key[data-key="DOWN"],
+    .key[data-key="CF"],
+    .key[data-key="NPV"],
+    .key[data-key="IRR"],
+    .key[data-key="%"],
+    .key[data-key="sqrt"],
+    .key[data-key="x2"],
+    .key[data-key="1/x"],
+    .key[data-key="INV"],
+    .key[data-key="("],
+    .key[data-key=")"],
+    .key[data-key="y^x"],
+    .key[data-key="LN"],
+    .key[data-key="STO"],
+    .key[data-key="RCL"] {
+      background: var(--k-fn);
+      color: var(--k-fn-text);
+      border-color: rgba(0, 0, 0, 0.18);
+    }
+
+    /* Operator (raspberry) keys */
+    .key[data-key="CE/C"],
+    .key[data-key="+"],
+    .key[data-key="-"],
+    .key[data-key="x"],
+    .key[data-key="/"],
+    .key[data-key="="] {
+      background: var(--k-op);
+      color: var(--k-op-text);
+      border-color: rgba(0, 0, 0, 0.18);
+    }
+
+    /* Number (cream) keys */
+    .key[data-key="0"],
+    .key[data-key="1"],
+    .key[data-key="2"],
+    .key[data-key="3"],
+    .key[data-key="4"],
+    .key[data-key="5"],
+    .key[data-key="6"],
+    .key[data-key="7"],
+    .key[data-key="8"],
+    .key[data-key="9"],
+    .key[data-key="."],
+    .key[data-key="+/-"] {
+      background: var(--k-num);
+      color: var(--k-num-text);
+      border-color: var(--k-num-border);
+      box-shadow: var(--shadow-xs);
+    }
+
+    /* TVM row: function-key colour, as on the real unit */
+    .key[data-key="N"],
+    .key[data-key="I/Y"],
+    .key[data-key="PV"],
+    .key[data-key="PMT"],
+    .key[data-key="FV"] {
+      background: var(--k-fn);
+      color: var(--k-fn-text);
+      border-color: rgba(0, 0, 0, 0.18);
+    }
+
+    /* The 2ND key is the real BA II Plus's signature mustard, pairing with
+       the amber second-function labels printed above every key. */
+    .key[data-key="2ND"] {
+      background: var(--k-tvm);
+      color: var(--k-tvm-text);
+      border-color: rgba(0, 0, 0, 0.18);
+    }
+
+    /* Tall + and bottom-right =, matching the hardware's key geometry */
+    .key[data-key="+"] { grid-row: span 2; }
+
+    /* Adjust 2nd-shift label color so it reads against the dark chassis */
+    .key::before { color: rgba(255, 197, 130, 0.85); }
+    [data-theme="dark"] .key::before,
+    :root:not([data-theme="light"]) .key::before { color: rgba(255, 197, 130, 0.78); }
+
+    @media (max-width: 1080px) {
+      .app {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 24px 0;
+      }
+      .rail {
+        position: static;
+      }
+      .rail:first-of-type { order: 2; }
+      .calculator-wrap { order: 1; }
+      .rail:last-of-type { order: 3; }
+    }
+
+    @media (max-width: 480px) {
+      .app { width: calc(100vw - 24px); padding: 16px 0; }
+      .panel { padding: 14px; }
+      .calculator { padding: 16px 14px 18px; }
+      .keyboard { column-gap: 5px; row-gap: 16px; }
+      .key { min-height: 38px; }
+      .key .primary { font-size: 13.5px; }
+      .theme-toggle { top: 10px; right: 10px; width: 36px; height: 36px; }
+    }
+
+    @media (max-width: 360px) {
+      .key::before { font-size: 8px; letter-spacing: 0.02em; }
+    }
+  </style>
+</head>
+<body>
+  <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle theme">
+    <span id="themeToggleIcon">◐</span>
+  </button>
+  <div class="app">
+    <section class="rail">
+      <div class="panel">
+        <h1>BA II Plus Simulator</h1>
+        <p class="small">Updated 21 September 2026 · 修正版 v2</p>
+        <p class="small">Companion to SUFE Corporate Finance, lectures 4–5. House rule: keep <b>P/Y = C/Y = 1</b>, type the <em>periodic</em> rate into I/Y (in percent), and let N be the number of periods. Cash outflows are negative.</p>
+        <p class="small" style="margin-top:10px;">Start with <b>Example 0</b> (reset + P/Y = 1), then the present value, LiSi's loan, the monthly stream, the two remaining keys, and finally ZhangSan's car. <a class="source-link" href="https://education.ti.com/download/en/ed-tech/ADF11FB65B284B6195B0A7E9502784BA/D6C5319FCAE345CEABCDF34B1B11F01D/BAIIPlus_Guidebook_EN.pdf">TI guidebook</a></p>
+      </div>
+      <div class="panel">
+        <h2>Examples</h2>
+        <p class="hint">Starting an example resets the calculator. Click <b>Step ▶</b> to advance one keystroke group at a time, or <b>Run all</b> to replay it.</p>
+        <div class="example-cards" id="exampleCards"></div>
+      </div>
+      <div class="panel">
+        <h2>Practice</h2>
+        <p class="hint">Answers stay hidden. Work each one on the keypad or keyboard, then press <b>Check</b>. Either sign viewpoint is accepted, as long as it is consistent.</p>
+        <div class="example-cards" id="practiceCards"></div>
+      </div>
+      <div class="panel">
+        <h2>Keystrokes</h2>
+        <div class="key-tape" id="keyTape"></div>
+        <div class="mode-hint" id="modeHint"></div>
+        <p class="hint" style="margin-top:8px;">Keyboard: digits, <b>+ − × ÷ =</b> · <b>N I P M F</b> for the gold row · <b>C</b> = CPT · <b>S</b> = 2ND · <b>Shift+minus</b> ( _ ) = +/− · <b>R</b> = RCL · <b>↑ ↓</b> · <b>Enter</b> = ENTER inside a worksheet · <b>Esc</b> = CE/C.</p>
+      </div>
+    </section>
+
+    <main class="calculator-wrap">
+      <section class="calculator" aria-label="BA II Plus calculator simulator">
+        <div class="brand">
+          <div class="model">BA II Plus</div>
+          <div class="maker">Texas Instruments teaching simulator</div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen" aria-live="polite">
+            <div class="indicators" id="indicators"></div>
+            <div class="display-row">
+              <div class="display-label" id="displayLabel"></div>
+              <div class="display-main" id="displayMain">0.00</div>
+            </div>
+            <div class="status-line">
+              <span id="displayMode">STANDARD</span>
+              <span id="displayStatus"></span>
+              <span id="pyBadge" class="py-badge" hidden title="House rule for this course: P/Y = C/Y = 1"></span>
+            </div>
+          </div>
+        </div>
+        <div class="keyboard" id="keyboard">
+          <!-- Row 1 -->
+          <button class="key wide-label" data-key="CPT" data-second="QUIT"><span class="primary">CPT</span></button>
+          <button class="key wide-label" data-key="ENTER" data-second="SET"><span class="primary">ENTER</span></button>
+          <button class="key" data-key="UP" data-second="DEL"><span class="primary">&uarr;</span></button>
+          <button class="key" data-key="DOWN" data-second="INS"><span class="primary">&darr;</span></button>
+          <button class="key" data-key="ON/OFF" aria-label="On/Off"><span class="primary icon">&#x23FB;</span></button>
+
+          <!-- Row 2 -->
+          <button class="key" data-key="2ND"><span class="primary">2ND</span></button>
+          <button class="key" data-key="CF"><span class="primary">CF</span></button>
+          <button class="key" data-key="NPV"><span class="primary">NPV</span></button>
+          <button class="key" data-key="IRR"><span class="primary">IRR</span></button>
+          <button class="key" data-key="RIGHT" aria-label="Correct entry"><span class="primary">&rarr;</span></button>
+
+          <!-- Row 3 (TVM) -->
+          <button class="key function" data-key="N" data-second="xP/Y"><span class="primary">N</span></button>
+          <button class="key function" data-key="I/Y" data-second="P/Y"><span class="primary">I/Y</span></button>
+          <button class="key function" data-key="PV" data-second="AMORT"><span class="primary">PV</span></button>
+          <button class="key function" data-key="PMT" data-second="BGN"><span class="primary">PMT</span></button>
+          <button class="key function" data-key="FV" data-second="CLR TVM"><span class="primary">FV</span></button>
+
+          <!-- Row 4 -->
+          <button class="key" data-key="%" data-second="K"><span class="primary">%</span></button>
+          <button class="key" data-key="sqrt"><span class="primary">&radic;x</span></button>
+          <button class="key" data-key="x2"><span class="primary">x<sup>2</sup></span></button>
+          <button class="key" data-key="1/x"><span class="primary">1/x</span></button>
+          <button class="key" data-key="/" data-second="RAND"><span class="primary">&divide;</span></button>
+
+          <!-- Row 5 -->
+          <button class="key" data-key="INV" data-second="HYP"><span class="primary">INV</span></button>
+          <button class="key" data-key="(" data-second="SIN"><span class="primary">(</span></button>
+          <button class="key" data-key=")" data-second="COS"><span class="primary">)</span></button>
+          <button class="key" data-key="y^x" data-second="TAN"><span class="primary">y<sup>x</sup></span></button>
+          <button class="key" data-key="x" data-second="X!"><span class="primary">&times;</span></button>
+
+          <!-- Row 6 -->
+          <button class="key" data-key="LN" data-second="e^x"><span class="primary">LN</span></button>
+          <button class="key" data-key="7" data-second="DATA"><span class="primary">7</span></button>
+          <button class="key" data-key="8" data-second="STAT"><span class="primary">8</span></button>
+          <button class="key" data-key="9" data-second="BOND"><span class="primary">9</span></button>
+          <button class="key" data-key="-" data-second="nPr"><span class="primary">&minus;</span></button>
+
+          <!-- Row 7 -->
+          <button class="key" data-key="STO" data-second="ROUND"><span class="primary">STO</span></button>
+          <button class="key" data-key="4" data-second="DEP"><span class="primary">4</span></button>
+          <button class="key" data-key="5" data-second="%CHG"><span class="primary">5</span></button>
+          <button class="key" data-key="6" data-second="BRKEVN"><span class="primary">6</span></button>
+          <button class="key" data-key="+" data-second="nCr"><span class="primary">+</span></button>
+
+          <!-- Row 8 -->
+          <button class="key" data-key="RCL"><span class="primary">RCL</span></button>
+          <button class="key" data-key="1" data-second="DATE"><span class="primary">1</span></button>
+          <button class="key" data-key="2" data-second="ICONV"><span class="primary">2</span></button>
+          <button class="key" data-key="3" data-second="PROFIT"><span class="primary">3</span></button>
+          
+          <!-- Row 9 -->
+          <button class="key wide-label" data-key="CE/C" data-second="CLR WORK"><span class="primary">CE/C</span></button>
+          <button class="key" data-key="0" data-second="MEM"><span class="primary">0</span></button>
+          <button class="key" data-key="." data-second="FORMAT"><span class="primary">.</span></button>
+          <button class="key" data-key="+/-" data-second="RESET"><span class="primary">+/&minus;</span></button>
+          <button class="key" data-key="=" data-second="ANS"><span class="primary">=</span></button>
+        </div>
+      </section>
+    </main>
+
+    <section class="rail">
+      <div class="panel" data-panel="TVM">
+        <h2>TVM</h2>
+        <p class="hint">Sign convention: cash <b>outflows are negative</b> (loans you receive use +PV, payments you make use −PMT).</p>
+        <div class="values" id="tvmValues"></div>
+      </div>
+      <div class="panel" data-panel="CASH FLOW">
+        <h2>Cash Flow</h2>
+        <p class="hint">CF₀ at t=0; C0n with frequency F0n repeats the value F0n times.</p>
+        <div class="cash-list" id="cashValues"></div>
+      </div>
+      <div class="panel" data-panel="WORKSHEET">
+        <h2>Worksheet</h2>
+        <div class="values" id="worksheetValues"></div>
+      </div>
+      <div class="panel" data-panel="FORMULA">
+        <h2>Formula</h2>
+        <div class="formula" id="formulaPanel">
+          <p class="hint">Press <b>CPT</b> on a worksheet to see the formula being applied.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script id="baii-engine" type="text/plain">
+(function (global) {
+  "use strict";
+
+  const EPS = 1e-10;
+  const MAX_CF = 24;
+
+  function finite(value) {
+    return Number.isFinite(value) ? value : NaN;
+  }
+
+  function factorial(n) {
+    if (n < 0 || Math.floor(n) !== n || n > 170) return NaN;
+    let out = 1;
+    for (let i = 2; i <= n; i += 1) out *= i;
+    return out;
+  }
+
+  function combination(n, r) {
+    n = Math.floor(n);
+    r = Math.floor(r);
+    if (n < 0 || r < 0 || r > n) return NaN;
+    r = Math.min(r, n - r);
+    let out = 1;
+    for (let i = 1; i <= r; i += 1) out = (out * (n - r + i)) / i;
+    return out;
+  }
+
+  function permutation(n, r) {
+    n = Math.floor(n);
+    r = Math.floor(r);
+    if (n < 0 || r < 0 || r > n) return NaN;
+    let out = 1;
+    for (let i = 0; i < r; i += 1) out *= n - i;
+    return out;
+  }
+
+  function roundTo(value, decimals) {
+    const factor = Math.pow(10, Math.max(0, Math.min(10, decimals)));
+    return Math.round((value + Number.EPSILON) * factor) / factor;
+  }
+
+  function signChanges(values) {
+    let previous = 0;
+    let changes = 0;
+    for (const value of values) {
+      if (value === 0) continue;
+      const sign = Math.sign(value);
+      if (previous && sign !== previous) changes += 1;
+      previous = sign;
+    }
+    return changes;
+  }
+
+  class BAIIEngine {
+    constructor() {
+      this.resetAll();
+    }
+
+    resetAll() {
+      this.power = true;
+      this.second = false;
+      this.cpt = false;
+      this.pendingReset = false;
+      this.memoryOp = null;
+      this.memoryMathOp = null;
+      this.inverseTrig = false;
+      this.hyperbolicTrig = false;
+      this.lastAnswer = 0;
+      this.error = "";
+      this.settings = {
+        decimals: 2,
+        angle: "DEG",
+        date: "US",
+        separator: "US",
+        method: "CHN",
+      };
+      this.memory = Array(10).fill(0);
+      this.resetStandard();
+      this.resetTVM();
+      this.resetCashFlow();
+      this.resetPercent();
+      this.resetInterest();
+      this.resetDate();
+      this.resetProfit();
+      this.resetBreakeven();
+      this.resetBond();
+      this.resetDepreciation();
+      this.resetStats();
+      this.mode = "standard";
+      this.modeIndex = 0;
+      this.entryText = "0";
+      this.entering = false;
+      this.valueReady = false;
+      this.display = this.makeDisplay({ value: 0, mode: "STANDARD" });
+    }
+
+    resetStandard() {
+      this.standard = {
+        value: 0,
+        acc: null,
+        pending: null,
+        lastOperand: null,
+        constant: null,
+        aosTokens: [],
+      };
+    }
+
+    resetTVM() {
+      this.tvm = {
+        N: 0,
+        IY: 0,
+        PV: 0,
+        PMT: 0,
+        FV: 0,
+        PY: 12,
+        CY: 12,
+        BGN: false,
+      };
+      this.amort = { P1: 1, P2: 1, BAL: 0, PRN: 0, INT: 0 };
+    }
+
+    resetCashFlow() {
+      this.cash = {
+        CF0: 0,
+        flows: Array.from({ length: MAX_CF }, () => ({ C: 0, F: 1 })),
+        I: 0,
+        NPV: 0,
+        IRR: 0,
+        IRRCount: 0,
+      };
+    }
+
+    resetPercent() {
+      this.percent = { OLD: 0, NEW: 0, CH: 0, PD: 0 };
+    }
+
+    resetInterest() {
+      this.interest = { NOM: 0, EFF: 0, CY: 1 };
+    }
+
+    resetDate() {
+      this.date = { DT1: 19901231, DT2: 19901231, DBD: 0, method: "ACT" };
+    }
+
+    resetProfit() {
+      this.profit = { CST: 0, SEL: 0, MAR: 0 };
+    }
+
+    resetBreakeven() {
+      this.breakeven = { FC: 0, VC: 0, P: 0, Q: 0, PRF: 0 };
+    }
+
+    resetBond() {
+      this.bond = {
+        SDT: 19901231,
+        CPN: 0,
+        RDT: 19901231,
+        RV: 100,
+        dayCount: "ACT",
+        coupons: 2,
+        YLD: 0,
+        PRI: 0,
+        AI: 0,
+      };
+    }
+
+    resetDepreciation() {
+      this.depr = {
+        method: "SL",
+        DB: 200,
+        LIF: 1,
+        M01: 1,
+        CST: 0,
+        SAL: 0,
+        YR: 1,
+        DEP: 0,
+        RBV: 0,
+        RDV: 0,
+      };
+    }
+
+    resetStats() {
+      this.stats = {
+        data: Array.from({ length: 50 }, () => ({ X: 0, Y: 1 })),
+        count: 0,
+        method: "LIN",
+        XP: 0,
+        YP: 0,
+      };
+    }
+
+    press(rawKey) {
+      const key = this.normalizeKey(rawKey);
+
+      if (!this.power && key !== "ON/OFF") return this.display;
+      if (key === "ON/OFF") return this.togglePower();
+      if (key === "2ND") {
+        this.second = !this.second;
+        this.display = { ...this.display, indicators: this.indicators() };
+        return this.display;
+      }
+
+      if (this.second) {
+        this.second = false;
+        return this.handleSecond(key);
+      }
+
+      if (this.pendingReset) return this.handleResetChoice(key);
+      if (this.memoryOp) return this.handleMemoryDigit(key);
+
+      if (/^[0-9]$/.test(key)) return this.inputDigit(key);
+      if (key === ".") return this.inputDecimal();
+
+      if (key === "CPT") return this.handleCPT();
+      if (key === "ENTER") return this.handleEnter();
+      if (key === "UP") return this.move(-1);
+      if (key === "DOWN") return this.move(1);
+      if (key === "RIGHT") return this.backspaceEntry();
+      if (key === "CE/C") return this.clearEntry();
+      if (key === "+/-") return this.toggleSign();
+
+      if (["+", "-", "x", "/", "y^x", "nCr", "nPr"].includes(key)) {
+        if (this.mode === "memory") return this.beginMemoryMath(key);
+        return this.binary(key);
+      }
+      if (key === "=") return this.equals();
+      if (key === "%") return this.percentKey();
+      if (["sqrt", "x2", "1/x", "LN", "e^x", "SIN", "COS", "TAN", "FACT"].includes(key)) return this.unary(key);
+
+      if (["N", "I/Y", "PV", "PMT", "FV"].includes(key)) return this.handleTVMKey(key);
+      if (key === "CF") return this.enterCashFlow();
+      if (key === "NPV") return this.enterNPV();
+      if (key === "IRR") return this.enterIRR();
+      if (key === "STO") return this.beginMemory("STO");
+      if (key === "RCL") return this.beginMemory("RCL");
+      if (key === "K") return this.setConstant();
+      if (key === "INV") return this.toggleInverseTrig();
+      if (key === "(" || key === ")") return this.handleParenthesis(key);
+      if (key === "RESET-NOW") return this.fullReset();
+
+      return this.setStatus("Key not assigned", this.modeName());
+    }
+
+    normalizeKey(key) {
+      const map = {
+        "*": "x",
+        "X": "x",
+        "CHS": "+/-",
+        "NEG": "+/-",
+        "RETURN": "ENTER",
+      };
+      return map[key] || key;
+    }
+
+    togglePower() {
+      this.resetStandard();
+      this.entryText = "0";
+      this.entering = false;
+      this.valueReady = false;
+      this.pendingReset = false;
+      this.memoryOp = null;
+      this.error = "";
+      this.power = !this.power;
+      if (!this.power) {
+        this.second = false;
+        this.cpt = false;
+        this.display = {
+          label: "",
+          main: "",
+          mode: "OFF",
+          status: "",
+          rawValue: 0,
+          indicators: [],
+        };
+      } else {
+        this.mode = "standard";
+        this.display = this.makeDisplay({ value: 0, mode: "STANDARD" });
+      }
+      return this.display;
+    }
+
+    handleSecond(key) {
+      const actions = {
+        QUIT: () => this.quit(),
+        FORMAT: () => this.enterFormat(),
+        RESET: () => this.askReset(),
+        ROUND: () => this.roundDisplayed(),
+        "P/Y": () => this.enterPY(),
+        "xP/Y": () => this.multiplyByPY(),
+        AMORT: () => this.enterAmort(),
+        BGN: () => this.enterBGN(),
+        "CLR TVM": () => this.clearTVM(),
+        "CLR WORK": () => this.clearWorksheet(),
+        SET: () => this.handleSet(),
+        DEL: () => this.deleteItem(),
+        INS: () => this.insertItem(),
+        "%CHG": () => this.enterPercent(),
+        ICONV: () => this.enterInterest(),
+        DATE: () => this.enterDate(),
+        PROFIT: () => this.enterProfit(),
+        BRKEVN: () => this.enterBreakeven(),
+        BOND: () => this.enterBond(),
+        DEP: () => this.enterDepreciation(),
+        DATA: () => this.enterData(),
+        STAT: () => this.enterStats(),
+        "e^x": () => this.unary("e^x"),
+        SIN: () => this.unary("SIN"),
+        COS: () => this.unary("COS"),
+        TAN: () => this.unary("TAN"),
+        RAND: () => this.random(),
+        "y^x": () => this.binary("y^x"),
+        MEM: () => this.enterMemory(),
+        ANS: () => this.recallAnswer(),
+        HYP: () => this.toggleHyperbolicTrig(),
+        K: () => this.setConstant(),
+        "X!": () => this.unary("FACT"),
+        nPr: () => this.binary("nPr"),
+        nCr: () => this.binary("nCr"),
+      };
+      return actions[key] ? actions[key]() : this.setStatus("2ND key not assigned", this.modeName());
+    }
+
+    fullReset() {
+      this.resetAll();
+      this.display = this.makeDisplay({ label: "RST", value: 0, mode: "STANDARD" });
+      return this.display;
+    }
+
+    askReset() {
+      this.pendingReset = true;
+      this.entering = false;
+      this.valueReady = false;
+      this.display = this.makeDisplay({ label: "RST ?", text: "", mode: "RESET", status: "ENTER" });
+      return this.display;
+    }
+
+    handleResetChoice(key) {
+      if (key === "ENTER") {
+        this.resetAll();
+        this.display = this.makeDisplay({ label: "RST", value: 0, mode: "STANDARD" });
+        return this.display;
+      }
+      this.pendingReset = false;
+      return this.quit();
+    }
+
+    quit() {
+      this.mode = "standard";
+      this.modeIndex = 0;
+      this.cpt = false;
+      this.entering = false;
+      this.valueReady = false;
+      return this.setStandardDisplay(this.standard.value);
+    }
+
+    clearTVM() {
+      this.resetStandard();
+      this.entering = false;
+      this.valueReady = false;
+      this.entryText = "0";
+      this.cpt = false;
+      const keepPY = this.tvm.PY;
+      const keepCY = this.tvm.CY;
+      const keepBGN = this.tvm.BGN;
+      this.resetTVM();
+      this.tvm.PY = keepPY;
+      this.tvm.CY = keepCY;
+      this.tvm.BGN = keepBGN;
+      return this.setDisplayForTVM("N", "TVM cleared");
+    }
+
+    clearWorksheet() {
+      this.resetStandard();
+      this.entering = false;
+      this.valueReady = false;
+      this.entryText = "0";
+      this.cpt = false;
+      if (this.mode === "cashflow" || this.mode === "npv" || this.mode === "irr") {
+        this.resetCashFlow();
+        this.mode = "cashflow";
+        this.modeIndex = 0;
+        return this.showCashFlow();
+      }
+      if (this.mode === "percent") {
+        this.resetPercent();
+        return this.showPercent();
+      }
+      if (this.mode === "interest") {
+        this.resetInterest();
+        return this.showInterest();
+      }
+      if (this.mode === "date") {
+        this.resetDate();
+        return this.showDate();
+      }
+      if (this.mode === "profit") {
+        this.resetProfit();
+        return this.showProfit();
+      }
+      if (this.mode === "breakeven") {
+        this.resetBreakeven();
+        return this.showBreakeven();
+      }
+      if (this.mode === "bond") {
+        this.resetBond();
+        return this.showBond();
+      }
+      if (this.mode === "depreciation") {
+        this.resetDepreciation();
+        return this.showDepreciation();
+      }
+      if (this.mode === "data" || this.mode === "stats") {
+        this.resetStats();
+        this.mode = "data";
+        this.modeIndex = 0;
+        return this.showData();
+      }
+      if (this.mode === "memory") {
+        this.memory.fill(0);
+        this.memoryMathOp = null;
+        this.modeIndex = 0;
+        return this.showMemory();
+      }
+      if (this.mode === "amort") {
+        this.amort = { P1: 1, P2: 1, BAL: 0, PRN: 0, INT: 0 };
+        return this.showAmort();
+      }
+      return this.clearEntry();
+    }
+
+    setStatus(status, mode) {
+      this.display = this.makeDisplay({
+        label: this.display.label,
+        text: this.display.main,
+        rawValue: this.display.rawValue,
+        mode: mode || this.modeName(),
+        status,
+      });
+      return this.display;
+    }
+
+    inputDigit(digit) {
+      // Keying a number after CPT cancels the pending compute; the next TVM key stores it.
+      this.cpt = false;
+      if (this.isWorksheetMode()) {
+        this.startOrAppend(digit);
+        return this.displayEntryForMode();
+      }
+      this.startOrAppend(digit);
+      return this.makeStandardEntryDisplay();
+    }
+
+    inputDecimal() {
+      this.cpt = false;
+      if (!this.entering) {
+        this.entryText = "0.";
+        this.entering = true;
+      } else if (!this.entryText.includes(".")) {
+        this.entryText += ".";
+      }
+      return this.isWorksheetMode() ? this.displayEntryForMode() : this.makeStandardEntryDisplay();
+    }
+
+    startOrAppend(digit) {
+      if (!this.entering) {
+        this.entryText = digit;
+        this.entering = true;
+        return;
+      }
+      if (this.entryText === "0") this.entryText = digit;
+      else if (this.entryText === "-0") this.entryText = "-" + digit;
+      else this.entryText += digit;
+    }
+
+    toggleSign() {
+      if (!this.entering && !this.isWorksheetMode()) {
+        // +/- on a displayed (computed or recalled) value: flip it and keep the
+        // normal formatted display, as the physical calculator does.
+        const value = -(this.currentValue() || 0);
+        this.standard.value = value;
+        return this.setResult(value);
+      }
+      if (!this.entering) {
+        this.entryText = String(this.currentValue() || 0);
+        this.entering = true;
+      }
+      if (this.entryText.startsWith("-")) this.entryText = this.entryText.slice(1);
+      else if (this.entryText !== "0") this.entryText = "-" + this.entryText;
+      return this.isWorksheetMode() ? this.displayEntryForMode() : this.makeStandardEntryDisplay();
+    }
+
+    clearEntry() {
+      this.error = "";
+      this.cpt = false;
+      if (this.entering) {
+        this.entryText = "0";
+        this.entering = false;
+        this.valueReady = false;
+        return this.isWorksheetMode() ? this.redisplay() : this.setStandardDisplay(0);
+      }
+      // Guidebook, "Clearing Calculator Entries and Memories": inside a prompted
+      // worksheet CE/C only clears the value keyed in but not entered and shows the
+      // previous value again. Leaving the worksheet is 2ND QUIT.
+      this.resetStandard();
+      this.entryText = "0";
+      this.entering = false;
+      this.valueReady = false;
+      if (this.mode !== "standard") return this.redisplay();
+      return this.setStandardDisplay(0);
+    }
+
+    backspaceEntry() {
+      if (!this.entering) {
+        return this.setStatus("BACK", this.modeName());
+      }
+      if (this.entryText.length <= 1 || (this.entryText.length === 2 && this.entryText.startsWith("-"))) {
+        this.entryText = "0";
+        this.entering = false;
+        this.valueReady = false;
+        return this.isWorksheetMode() ? this.redisplay() : this.setStandardDisplay(0);
+      }
+      this.entryText = this.entryText.slice(0, -1);
+      return this.isWorksheetMode() ? this.displayEntryForMode() : this.makeStandardEntryDisplay();
+    }
+
+    currentValue() {
+      if (this.entering) return Number(this.entryText);
+      if (Number.isFinite(this.display.rawValue)) return this.display.rawValue;
+      return this.standard.value;
+    }
+
+    makeStandardEntryDisplay() {
+      const value = Number(this.entryText);
+      this.display = this.makeDisplay({
+        text: this.formatEntry(this.entryText),
+        rawValue: finite(value),
+        mode: "STANDARD",
+      });
+      return this.display;
+    }
+
+    setStandardDisplay(value, status) {
+      this.standard.value = finite(value);
+      this.display = this.makeDisplay({ value: this.standard.value, mode: "STANDARD", status });
+      return this.display;
+    }
+
+    hasOperand() {
+      return this.entering || this.valueReady;
+    }
+
+    setResult(value, status) {
+      this.entering = false;
+      this.valueReady = true;
+      this.error = "";
+      return this.setStandardDisplay(value, status);
+    }
+
+    toggleInverseTrig() {
+      this.inverseTrig = !this.inverseTrig;
+      return this.redisplay();
+    }
+
+    toggleHyperbolicTrig() {
+      this.hyperbolicTrig = !this.hyperbolicTrig;
+      return this.redisplay();
+    }
+
+    recallAnswer() {
+      const value = this.lastAnswer;
+      return this.setResult(value, "ANS");
+    }
+
+    setConstant() {
+      if (this.standard.pending) {
+        this.standard.constant = {
+          op: this.standard.pending,
+          operand: this.hasOperand() ? this.currentValue() : this.standard.lastOperand ?? this.standard.value,
+        };
+      }
+      return this.setStatus("K", "CONSTANT");
+    }
+
+    handleParenthesis(key) {
+      if (this.settings.method !== "AOS") return this.setStatus("AOS only", "STANDARD");
+      const tokens = this.standard.aosTokens;
+      if (key === "(") {
+        if (this.hasOperand()) return this.showError(5);
+        tokens.push("(");
+        return this.setStatus("(", "STANDARD");
+      }
+      if (this.hasOperand()) tokens.push(this.currentValue());
+      const open = tokens.lastIndexOf("(");
+      if (open < 0) return this.showError(5);
+      const value = this.evaluateAOS(tokens.slice(open + 1));
+      if (!Number.isFinite(value)) return this.showError(5);
+      tokens.splice(open);
+      return this.setResult(value, ")");
+    }
+
+    isAOSOperator(token) {
+      return ["y^x", "nCr", "nPr", "x", "/", "+", "-"].includes(token);
+    }
+
+    binary(op) {
+      if (this.settings.method === "AOS") return this.binaryAOS(op);
+      const value = this.currentValue();
+      if (this.standard.pending && this.hasOperand()) {
+        const result = this.applyBinary(this.standard.pending, this.standard.acc, value);
+        if (!Number.isFinite(result)) return this.showError(2);
+        this.standard.acc = result;
+        this.standard.value = result;
+      } else if (this.standard.pending === null) {
+        this.standard.acc = value;
+        this.standard.value = value;
+      }
+      this.standard.pending = op;
+      this.entering = false;
+      this.valueReady = false;
+      return this.setStandardDisplay(this.standard.acc, op);
+    }
+
+    binaryAOS(op) {
+      const value = this.currentValue();
+      if (this.hasOperand() || this.standard.aosTokens.length === 0) this.standard.aosTokens.push(value);
+      const last = this.standard.aosTokens[this.standard.aosTokens.length - 1];
+      if (this.isAOSOperator(last)) this.standard.aosTokens[this.standard.aosTokens.length - 1] = op;
+      else if (last === "(") return this.showError(2);
+      else this.standard.aosTokens.push(op);
+      this.entering = false;
+      this.valueReady = false;
+      this.standard.value = value;
+      return this.setStandardDisplay(value, op);
+    }
+
+    equals() {
+      if (this.settings.method === "AOS" && this.standard.aosTokens.length) {
+        if (this.hasOperand()) this.standard.aosTokens.push(this.currentValue());
+        const result = this.evaluateAOS(this.standard.aosTokens);
+        this.standard.aosTokens = [];
+        this.entering = false;
+        this.valueReady = false;
+        if (!Number.isFinite(result)) return this.showError(2);
+        this.lastAnswer = result;
+        return this.setResult(result);
+      }
+      if (!this.standard.pending) {
+        if (this.standard.constant && !this.entering) {
+          const result = this.applyBinary(this.standard.constant.op, this.currentValue(), this.standard.constant.operand);
+          if (!Number.isFinite(result)) return this.showError(2);
+          this.lastAnswer = result;
+          return this.setResult(result);
+        }
+        const value = this.currentValue();
+        this.lastAnswer = value;
+        return this.setResult(value);
+      }
+      const right = this.hasOperand() ? this.currentValue() : this.standard.value;
+      const left = this.standard.acc ?? this.standard.value;
+      const result = this.applyBinary(this.standard.pending, left, right);
+      if (!Number.isFinite(result)) return this.showError(2);
+      this.standard.lastOperand = right;
+      this.standard.acc = result;
+      this.standard.value = result;
+      this.standard.pending = null;
+      this.entering = false;
+      this.valueReady = false;
+      this.lastAnswer = result;
+      return this.setResult(result);
+    }
+
+    applyBinary(op, left, right) {
+      if (op === "+") return left + right;
+      if (op === "-") return left - right;
+      if (op === "x") return left * right;
+      if (op === "/") return right === 0 ? NaN : left / right;
+      if (op === "y^x") return Math.pow(left, right);
+      if (op === "nCr") return combination(left, right);
+      if (op === "nPr") return permutation(left, right);
+      return NaN;
+    }
+
+    evaluateAOS(tokens) {
+      const work = tokens.slice();
+      if (!work.length || work.length % 2 === 0) return NaN;
+      if (work.some((token, i) => i % 2 === 0 ? !Number.isFinite(token) : !this.isAOSOperator(token))) return NaN;
+      // TI AOS hierarchy; operators within a tier are evaluated left to right.
+      for (const tier of [["nCr", "nPr"], ["y^x"], ["x", "/"], ["+", "-"]]) {
+        for (let i = 1; i < work.length - 1;) {
+          if (tier.includes(work[i])) {
+            const result = this.applyBinary(work[i], work[i - 1], work[i + 1]);
+            if (!Number.isFinite(result)) return NaN;
+            work.splice(i - 1, 3, result);
+          } else i += 2;
+        }
+      }
+      return work.length === 1 ? work[0] : NaN;
+    }
+
+    percentKey() {
+      let value = this.currentValue();
+      if (this.standard.pending === "+" || this.standard.pending === "-") {
+        value = (this.standard.acc || 0) * value / 100;
+      } else {
+        value = value / 100;
+      }
+      return this.setResult(value, "%");
+    }
+
+    unary(op) {
+      const value = this.currentValue();
+      let result = NaN;
+      if (op === "sqrt") result = value < 0 ? NaN : Math.sqrt(value);
+      if (op === "x2") result = value * value;
+      if (op === "1/x") result = value === 0 ? NaN : 1 / value;
+      if (op === "LN") result = value <= 0 ? NaN : Math.log(value);
+      if (op === "e^x") result = Math.exp(value);
+      if (["SIN", "COS", "TAN"].includes(op)) {
+        const inv = this.inverseTrig;
+        const hyp = this.hyperbolicTrig;
+        if (op === "SIN" && !inv && !hyp) result = Math.sin(this.angleToRadians(value));
+        if (op === "COS" && !inv && !hyp) result = Math.cos(this.angleToRadians(value));
+        if (op === "TAN" && !inv && !hyp) result = Math.tan(this.angleToRadians(value));
+        if (op === "SIN" && inv && !hyp) result = this.radiansToAngle(Math.asin(value));
+        if (op === "COS" && inv && !hyp) result = this.radiansToAngle(Math.acos(value));
+        if (op === "TAN" && inv && !hyp) result = this.radiansToAngle(Math.atan(value));
+        if (op === "SIN" && !inv && hyp) result = Math.sinh(value);
+        if (op === "COS" && !inv && hyp) result = Math.cosh(value);
+        if (op === "TAN" && !inv && hyp) result = Math.tanh(value);
+        if (op === "SIN" && inv && hyp) result = Math.asinh(value);
+        if (op === "COS" && inv && hyp) result = Math.acosh(value);
+        if (op === "TAN" && inv && hyp) result = Math.atanh(value);
+        this.inverseTrig = false;
+        this.hyperbolicTrig = false;
+      }
+      if (op === "FACT") result = factorial(value);
+      if (!Number.isFinite(result)) return this.showError(2);
+      this.entering = false;
+      this.valueReady = false;
+      this.lastAnswer = result;
+      return this.setResult(result, op);
+    }
+
+    angleToRadians(value) {
+      return this.settings.angle === "RAD" ? value : value * Math.PI / 180;
+    }
+
+    radiansToAngle(value) {
+      return this.settings.angle === "RAD" ? value : value * 180 / Math.PI;
+    }
+
+    random() {
+      const value = Math.random();
+      this.entering = false;
+      this.valueReady = false;
+      return this.setResult(value, "RAND");
+    }
+
+    beginMemory(op) {
+      this.memoryOp = op;
+      return this.setStatus(op, "MEMORY");
+    }
+
+    handleMemoryDigit(key) {
+      if (this.memoryOp === "RCL" && ["N", "I/Y", "PV", "PMT", "FV"].includes(key)) {
+        this.memoryOp = null;
+        this.entering = false;
+        this.valueReady = false;
+        const prop = key === "I/Y" ? "IY" : key;
+        this.standard.value = this.tvm[prop];
+        this.valueReady = true;
+        return this.setDisplayForTVM(prop);
+      }
+      if (!/^[0-9]$/.test(key)) {
+        this.memoryOp = null;
+        return this.redisplay();
+      }
+      const index = Number(key);
+      if (this.memoryOp === "STO") {
+        this.memory[index] = this.currentValue();
+        this.memoryOp = null;
+        return this.setStatus(`M${index}`, "MEMORY");
+      }
+      const value = this.memory[index];
+      this.memoryOp = null;
+      this.entering = false;
+      this.valueReady = false;
+      return this.setResult(value, `RCL ${index}`);
+    }
+
+    enterMemory() {
+      this.mode = "memory";
+      this.modeIndex = 0;
+      this.memoryMathOp = null;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showMemory();
+    }
+
+    showMemory() {
+      this.display = this.makeDisplay({
+        label: `M${this.modeIndex}=`,
+        value: this.memory[this.modeIndex],
+        mode: "MEMORY",
+        status: this.memoryMathOp || "",
+      });
+      return this.display;
+    }
+
+    beginMemoryMath(op) {
+      this.memoryMathOp = op;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showMemory();
+    }
+
+    enterMemoryValue() {
+      if (this.entering || this.valueReady) {
+        const value = this.currentValue();
+        if (this.memoryMathOp) {
+          const result = this.applyBinary(this.memoryMathOp, this.memory[this.modeIndex], value);
+          if (!Number.isFinite(result)) return this.showError(5);
+          this.memory[this.modeIndex] = result;
+          this.memoryMathOp = null;
+        } else {
+          this.memory[this.modeIndex] = value;
+        }
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showMemory();
+    }
+
+    handleCPT() {
+      if (["npv", "irr", "percent", "interest", "profit", "breakeven", "bond", "stats"].includes(this.mode)) {
+        return this.computeCurrentWorksheet();
+      }
+      if (this.mode === "amort") return this.advanceAmort();
+      this.cpt = true;
+      return this.setStatus("COMPUTE", this.modeName());
+    }
+
+    handleEnter() {
+      if (this.mode === "standard") return this.equals();
+      if (this.standard.pending || this.standard.aosTokens.length) {
+        this.equals();
+        if (this.error) return this.display;
+      }
+      if (this.mode === "format") return this.enterFormatValue();
+      if (this.mode === "py") return this.enterPYValue();
+      if (this.mode === "cashflow") return this.enterCashFlowValue();
+      if (this.mode === "npv") return this.enterNPVValue();
+      if (this.mode === "percent") return this.enterPercentValue();
+      if (this.mode === "interest") return this.enterInterestValue();
+      if (this.mode === "amort") return this.enterAmortValue();
+      if (this.mode === "date") return this.enterDateValue();
+      if (this.mode === "profit") return this.enterProfitValue();
+      if (this.mode === "breakeven") return this.enterBreakevenValue();
+      if (this.mode === "bond") return this.enterBondValue();
+      if (this.mode === "depreciation") return this.enterDepreciationValue();
+      if (this.mode === "data") return this.enterDataValue();
+      if (this.mode === "stats") return this.enterStatsValue();
+      if (this.mode === "memory") return this.enterMemoryValue();
+      return this.redisplay();
+    }
+
+    handleSet() {
+      if (this.mode === "format") return this.toggleFormatSetting();
+      if (this.mode === "bgn") {
+        this.tvm.BGN = !this.tvm.BGN;
+        return this.showBGN();
+      }
+      if (this.mode === "date") {
+        this.date.method = this.date.method === "ACT" ? "360" : "ACT";
+        return this.showDate();
+      }
+      if (this.mode === "bond") {
+        if (this.modeIndex === 4) this.bond.dayCount = this.bond.dayCount === "ACT" ? "360" : "ACT";
+        if (this.modeIndex === 5) this.bond.coupons = this.bond.coupons === 2 ? 1 : 2;
+        return this.showBond();
+      }
+      if (this.mode === "depreciation" && this.modeIndex === 0) {
+        const methods = ["SL", "SYD", "DB", "DBX"];
+        this.depr.method = methods[(methods.indexOf(this.depr.method) + 1) % methods.length];
+        return this.showDepreciation();
+      }
+      if (this.mode === "stats" && this.modeIndex === 0) {
+        const methods = ["LIN", "Ln", "EXP", "PWR", "1-V"];
+        this.stats.method = methods[(methods.indexOf(this.stats.method) + 1) % methods.length];
+        return this.showStats();
+      }
+      return this.redisplay();
+    }
+
+    handleTVMKey(key) {
+      const prop = key === "I/Y" ? "IY" : key;
+      if (this.cpt) {
+        this.cpt = false;
+        const value = this.computeTVM(prop);
+        if (!Number.isFinite(value)) return this.showError(prop === "IY" ? this.rateSolveError || 5 : 5);
+        if (prop === "N" && value <= 0) return this.showError(5);
+        this.tvm[prop] = value;
+        this.lastAnswer = value;
+        this.entering = false;
+        this.valueReady = false;
+        return this.setDisplayForTVM(prop);
+      }
+      // Physical BA II Plus: pressing a TVM key stores whatever is on the display,
+      // whether it was typed or is the result of a calculation (e.g. 6.75 / 12 = then I/Y).
+      // Use RCL + key to look at a register without changing it.
+      this.tvm[prop] = this.currentValue();
+      this.standard.value = this.tvm[prop];
+      this.entering = false;
+      this.valueReady = false;
+      return this.setDisplayForTVM(prop);
+    }
+
+    setDisplayForTVM(prop, status) {
+      const labels = { IY: "I/Y" };
+      this.standard.value = this.tvm[prop];
+      this.valueReady = true;
+      this.display = this.makeDisplay({
+        label: `${labels[prop] || prop}=`,
+        value: this.tvm[prop],
+        mode: "TVM",
+        status,
+      });
+      return this.display;
+    }
+
+    periodicRate(iy = this.tvm.IY) {
+      const py = this.tvm.PY || 1;
+      const cy = this.tvm.CY || py;
+      return Math.expm1(Math.log1p(iy / 100 / cy) * cy / py);
+    }
+
+    tvmEquation(i, N, PV, PMT, FV) {
+      if (Math.abs(i) < EPS) return PV + PMT * N + FV;
+      const factor = Math.pow(1 + i, N);
+      const due = this.tvm.BGN ? 1 + i : 1;
+      return PV * factor + PMT * due * ((factor - 1) / i) + FV;
+    }
+
+    computeTVM(prop) {
+      const { N, PV, PMT, FV } = this.tvm;
+      const i = this.periodicRate();
+      const due = this.tvm.BGN ? 1 + i : 1;
+      if (prop === "PV") {
+        if (Math.abs(i) < EPS) return -(PMT * N + FV);
+        const factor = Math.pow(1 + i, N);
+        return -(PMT * due * ((factor - 1) / i) + FV) / factor;
+      }
+      if (prop === "PMT") {
+        if (Math.abs(i) < EPS) return N === 0 ? NaN : -(PV + FV) / N;
+        const factor = Math.pow(1 + i, N);
+        return -(PV * factor + FV) / (due * ((factor - 1) / i));
+      }
+      if (prop === "FV") {
+        if (Math.abs(i) < EPS) return -(PV + PMT * N);
+        const factor = Math.pow(1 + i, N);
+        return -(PV * factor + PMT * due * ((factor - 1) / i));
+      }
+      if (prop === "N") {
+        if (Math.abs(i) < EPS) return PMT === 0 ? NaN : -(PV + FV) / PMT;
+        const numerator = PMT * due / i - FV;
+        const denominator = PV + PMT * due / i;
+        const ratio = numerator / denominator;
+        return ratio > 0 ? Math.log(ratio) / Math.log(1 + i) : NaN;
+      }
+      if (prop === "IY") return this.solveTVMRate();
+      return NaN;
+    }
+
+    solveTVMRate() {
+      const { N, PV, PMT, FV, PY, CY, BGN } = this.tvm;
+      this.rateSolveError = 5;
+      if (N <= 0 || ![N, PV, PMT, FV, PY, CY].every(Number.isFinite)) return NaN;
+      if (PMT === 0) {
+        if (PV * FV >= 0 || PV === 0 || FV === 0) return NaN;
+        return Math.expm1((Math.log(Math.abs(FV)) - Math.log(Math.abs(PV))) / N * PY / CY) * CY * 100;
+      }
+      if (signChanges([PV, PMT, FV]) === 0) return NaN;
+      // Work in log(1+i), scaling the three terms before summation. This
+      // avoids overflow at long horizons and the old 500% search ceiling.
+      const f = z => {
+        const logExpm1Abs = x => x > 700 ? x : Math.log(Math.abs(Math.expm1(x)));
+        const logAnnuity = z === 0 ? Math.log(N) : (BGN ? z : 0) + logExpm1Abs(-N * z) - logExpm1Abs(z);
+        const terms = [[PV, 0], [PMT, logAnnuity], [FV, -N * z]].filter(([v]) => v !== 0);
+        const logs = terms.map(([v, exponent]) => Math.log(Math.abs(v)) + exponent);
+        const scale = logs.reduce((maximum,value) => Math.max(maximum,value), -Infinity);
+        return terms.reduce((sum, [v], j) => sum + Math.sign(v) * Math.exp(logs[j] - scale), 0);
+      };
+      const roots = [];
+      let last = -32, previous = f(last);
+      for (let k = 1; k <= 4096; k += 1) {
+        const z = -32 + k / 64;
+        const value = f(z);
+        if (value === 0) roots.push(z);
+        else if (previous !== 0 && Math.sign(value) !== Math.sign(previous)) roots.push(this.bisectLog(f, last, z));
+        last = z; previous = value;
+      }
+      this.rateSolveError = 7;
+      if (!roots.length) return NaN;
+      const root = roots.sort((a,b) => Math.abs(Math.expm1(a)) - Math.abs(Math.expm1(b)))[0];
+      return Math.expm1(root * PY / CY) * CY * 100;
+    }
+
+    bisectLog(f, low, high) {
+      let flo = f(low);
+      if (flo === 0) return low;
+      if (f(high) === 0) return high;
+      for (let k = 0; k < 120; k += 1) {
+        const mid = (low + high) / 2, fm = f(mid);
+        if (Math.abs(fm) < 1e-14 || high - low < 1e-13) return mid;
+        if (Math.sign(fm) === Math.sign(flo)) { low = mid; flo = fm; }
+        else high = mid;
+      }
+      return (low + high) / 2;
+    }
+
+    bisect(f, low, high) {
+      let flo = f(low);
+      for (let i = 0; i < 120; i += 1) {
+        const mid = (low + high) / 2;
+        const fmid = f(mid);
+        if (Math.abs(fmid) < 1e-9) return mid;
+        if (Math.sign(fmid) === Math.sign(flo)) {
+          low = mid;
+          flo = fmid;
+        } else {
+          high = mid;
+        }
+      }
+      return (low + high) / 2;
+    }
+
+    enterPY() {
+      this.mode = "py";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showPY();
+    }
+
+    showPY() {
+      const label = this.modeIndex === 0 ? "P/Y=" : "C/Y=";
+      const value = this.modeIndex === 0 ? this.tvm.PY : this.tvm.CY;
+      this.display = this.makeDisplay({ label, value, mode: "P/Y" });
+      return this.display;
+    }
+
+    enterPYValue() {
+      if (this.entering || this.valueReady) {
+        const value = this.currentValue();
+        if (value <= 0) return this.showError(5);
+        if (this.modeIndex === 0) {
+          this.tvm.PY = value;
+          this.tvm.CY = value;
+        } else {
+          this.tvm.CY = value;
+        }
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showPY();
+    }
+
+    multiplyByPY() {
+      const result = this.currentValue() * this.tvm.PY;
+      this.entryText = String(result);
+      this.entering = true;
+      this.standard.value = result;
+      this.display = this.makeDisplay({ value: result, mode: "STANDARD", status: "xP/Y" });
+      return this.display;
+    }
+
+    enterBGN() {
+      this.mode = "bgn";
+      this.entering = false;
+      this.valueReady = false;
+      return this.showBGN();
+    }
+
+    showBGN() {
+      this.display = this.makeDisplay({
+        label: this.tvm.BGN ? "BGN" : "END",
+        text: "",
+        rawValue: 0,
+        mode: "BGN",
+        status: "SET",
+      });
+      return this.display;
+    }
+
+    enterAmort() {
+      this.mode = "amort";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showAmort();
+    }
+
+    amortVars() {
+      return ["P1", "P2", "BAL", "PRN", "INT"];
+    }
+
+    showAmort() {
+      const key = this.amortVars()[this.modeIndex];
+      if (["BAL", "PRN", "INT"].includes(key)) this.computeAmort();
+      this.display = this.makeDisplay({ label: `${key}=`, value: this.amort[key], mode: "AMORT" });
+      return this.display;
+    }
+
+    enterAmortValue() {
+      const key = this.amortVars()[this.modeIndex];
+      if ((this.entering || this.valueReady) && ["P1", "P2"].includes(key)) {
+        this.amort[key] = Math.max(1, Math.round(this.currentValue()));
+        if (key === "P1" && this.amort.P2 < this.amort.P1) this.amort.P2 = this.amort.P1;
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showAmort();
+    }
+
+    advanceAmort() {
+      if (this.modeIndex === 0 || this.modeIndex === 1) {
+        const length = Math.max(1, this.amort.P2 - this.amort.P1 + 1);
+        this.amort.P1 = this.amort.P2 + 1;
+        this.amort.P2 = this.amort.P1 + length - 1;
+        return this.showAmort();
+      }
+      return this.showAmort();
+    }
+
+    computeAmort() {
+      const i = this.periodicRate();
+      const decimals = this.settings.decimals === 9 ? 10 : this.settings.decimals;
+      const payment = roundTo(this.tvm.PMT, decimals);
+      let balance = this.tvm.PV;
+      let principalSum = 0;
+      let interestSum = 0;
+      const p1 = Math.max(1, Math.round(this.amort.P1));
+      const p2 = Math.max(p1, Math.round(this.amort.P2));
+      for (let period = 1; period <= p2; period += 1) {
+        const interest = roundTo(this.tvm.BGN && period === 1 ? 0 : balance * i, decimals);
+        const principalReduction = roundTo(-payment - interest, decimals);
+        if (period >= p1) {
+          principalSum += -principalReduction;
+          interestSum += -interest;
+        }
+        balance = roundTo(balance - principalReduction, decimals);
+      }
+      this.amort.BAL = balance;
+      this.amort.PRN = roundTo(principalSum, decimals);
+      this.amort.INT = roundTo(interestSum, decimals);
+    }
+
+    enterCashFlow() {
+      this.mode = "cashflow";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showCashFlow();
+    }
+
+    cashFlowLabel(index) {
+      if (index === 0) return "CFo=";
+      const n = Math.ceil(index / 2);
+      return `${index % 2 === 1 ? "C" : "F"}${String(n).padStart(2, "0")}=`;
+    }
+
+    cashFlowValue(index) {
+      if (index === 0) return this.cash.CF0;
+      const n = Math.ceil(index / 2) - 1;
+      return index % 2 === 1 ? this.cash.flows[n].C : this.cash.flows[n].F;
+    }
+
+    setCashFlowValue(index, value) {
+      if (index === 0) this.cash.CF0 = value;
+      else {
+        const n = Math.ceil(index / 2) - 1;
+        if (index % 2 === 1) this.cash.flows[n].C = value;
+        else this.cash.flows[n].F = Math.max(1, Math.round(value));
+      }
+    }
+
+    showCashFlow() {
+      this.display = this.makeDisplay({
+        label: this.cashFlowLabel(this.modeIndex),
+        value: this.cashFlowValue(this.modeIndex),
+        mode: "CASH FLOW",
+      });
+      return this.display;
+    }
+
+    enterCashFlowValue() {
+      if (this.entering || this.valueReady) {
+        this.setCashFlowValue(this.modeIndex, this.currentValue());
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showCashFlow();
+    }
+
+    deleteItem() {
+      if (this.mode !== "cashflow" || this.modeIndex === 0) return this.redisplay();
+      const n = Math.ceil(this.modeIndex / 2) - 1;
+      this.cash.flows.splice(n, 1);
+      this.cash.flows.push({ C: 0, F: 1 });
+      this.modeIndex = Math.min(this.modeIndex, MAX_CF * 2 - 1);
+      return this.showCashFlow();
+    }
+
+    insertItem() {
+      if (this.mode !== "cashflow" || this.modeIndex === 0) return this.redisplay();
+      const n = Math.ceil(this.modeIndex / 2) - 1;
+      this.cash.flows.splice(n, 0, { C: 0, F: 1 });
+      this.cash.flows = this.cash.flows.slice(0, MAX_CF);
+      return this.showCashFlow();
+    }
+
+    enterNPV() {
+      this.mode = "npv";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showNPV();
+    }
+
+    showNPV() {
+      const label = this.modeIndex === 0 ? "I=" : "NPV=";
+      const value = this.modeIndex === 0 ? this.cash.I : this.cash.NPV;
+      this.display = this.makeDisplay({ label, value, mode: "NPV" });
+      return this.display;
+    }
+
+    enterNPVValue() {
+      if (this.modeIndex === 0 && (this.entering || this.valueReady)) {
+        this.cash.I = this.currentValue();
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showNPV();
+    }
+
+    enterIRR() {
+      this.mode = "irr";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      this.display = this.makeDisplay({ label: "IRR=", value: this.cash.IRR, mode: "IRR", status: this.cash.IRRCount > 1 ? "Multiple IRRs" : "" });
+      return this.display;
+    }
+
+    expandedCashFlows() {
+      const values = [this.cash.CF0];
+      for (const flow of this.cash.flows) {
+        if (flow.C === 0 && values.length > 1) {
+          const laterNonZero = this.cash.flows.slice(this.cash.flows.indexOf(flow) + 1).some((f) => f.C !== 0);
+          if (!laterNonZero) break;
+        }
+        for (let i = 0; i < Math.max(1, Math.round(flow.F)); i += 1) values.push(flow.C);
+      }
+      while (values.length > 1 && values[values.length - 1] === 0) values.pop();
+      return values;
+    }
+
+    cashNPV(ratePercent) {
+      const r = ratePercent / 100;
+      return this.expandedCashFlows().reduce((sum, cf, index) => sum + cf / Math.pow(1 + r, index), 0);
+    }
+
+    computeIRR() {
+      const flows = this.expandedCashFlows();
+      const changes = signChanges(flows);
+      this.cash.IRRCount = 0;
+      this.rateSolveError = changes === 0 ? 5 : 7;
+      if (changes === 0 || !flows.every(Number.isFinite)) return NaN;
+      // Positive discount factors q = exp(z) turn NPV into a polynomial.
+      // Its derivative partitions the axis into monotone intervals, so a
+      // repeated root is checked at a stationary point, not lost in a scan.
+      const terms = flows.map((c,t) => ({c,t})).filter(({c}) => c !== 0);
+      const evaluate = (ts,z) => {
+        const logs = ts.map(({c,t}) => Math.log(Math.abs(c)) + t * z);
+        const scale = logs.reduce((maximum,value) => Math.max(maximum,value), -Infinity);
+        return ts.reduce((sum,{c},j) => sum + Math.sign(c) * Math.exp(logs[j] - scale), 0);
+      };
+      const isolate = ts => {
+        if (ts.length < 2) return [];
+        if (ts.length === 2) {
+          if (Math.sign(ts[0].c) === Math.sign(ts[1].c)) return [];
+          const z = (Math.log(Math.abs(ts[0].c)) - Math.log(Math.abs(ts[1].c))) / (ts[1].t - ts[0].t);
+          return z >= -32 && z <= 32 ? [z] : [];
+        }
+        const origin = ts[0].t;
+        const scale = Math.max(...ts.map(({c}) => Math.abs(c)));
+        const derivative = ts.slice(1).map(({c,t}) => ({c:c / scale * (t-origin),t:t-origin}));
+        const critical = isolate(derivative);
+        const f = z => evaluate(ts,z);
+        const points = [-32,...critical,32];
+        const roots = critical.filter(z => Math.abs(f(z)) < 1e-12);
+        for (let j=1;j<points.length;j+=1) {
+          const low=points[j-1], high=points[j], a=f(low), b=f(high);
+          if (Math.abs(a)<1e-12 || Math.abs(b)<1e-12) continue;
+          if (Math.sign(a)!==Math.sign(b)) roots.push(this.bisectLog(f,low,high));
+        }
+        return roots.sort((a,b)=>a-b).filter((z,j,all)=>j===0 || Math.abs(z-all[j-1])>1e-8);
+      };
+      let roots;
+      if (changes === 1) {
+        const f=z=>evaluate(terms,z), a=f(-32), b=f(32);
+        roots=Math.sign(a)!==Math.sign(b)?[this.bisectLog(f,-32,32)]:[];
+      } else {
+        // Bound recursion/work for long nonconventional cash-flow series.
+        // Error 7 is a numerical limit; it does not claim that no IRR exists.
+        if (terms.length > 128) return NaN;
+        roots=isolate(terms);
+      }
+      const rates=roots.map(z=>Math.expm1(-z)*100).filter(Number.isFinite);
+      this.cash.IRRCount=rates.length;
+      return rates.length ? rates.sort((a,b)=>Math.abs(a)-Math.abs(b))[0] : NaN;
+    }
+
+    computeCurrentWorksheet() {
+      if (this.mode === "npv" && this.modeIndex === 1) {
+        this.cash.NPV = this.cashNPV(this.cash.I);
+        this.lastAnswer = this.cash.NPV;
+        this.entering = false;
+        this.valueReady = false;
+        return this.showNPV();
+      }
+      if (this.mode === "irr") {
+        const value = this.computeIRR();
+        if (!Number.isFinite(value)) return this.showError(this.rateSolveError);
+        this.cash.IRR = value;
+        this.lastAnswer = value;
+        this.entering = false;
+        this.valueReady = false;
+        return this.enterIRR();
+      }
+      if (this.mode === "percent") return this.computePercent();
+      if (this.mode === "interest") return this.computeInterest();
+      if (this.mode === "profit") return this.computeProfit();
+      if (this.mode === "breakeven") return this.computeBreakeven();
+      if (this.mode === "bond") return this.computeBond();
+      if (this.mode === "stats") return this.computeStats();
+      return this.redisplay();
+    }
+
+    enterPercent() {
+      this.mode = "percent";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showPercent();
+    }
+
+    percentVars() {
+      return ["OLD", "NEW", "CH", "PD"];
+    }
+
+    showPercent() {
+      const key = this.percentVars()[this.modeIndex];
+      const label = key === "CH" ? "%CH=" : key === "PD" ? "#PD=" : `${key}=`;
+      this.display = this.makeDisplay({ label, value: this.percent[key], mode: "%CHG" });
+      return this.display;
+    }
+
+    enterPercentValue() {
+      if (this.entering || this.valueReady) {
+        const key = this.percentVars()[this.modeIndex];
+        this.percent[key] = this.currentValue();
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showPercent();
+    }
+
+    computePercent() {
+      const key = this.percentVars()[this.modeIndex];
+      const pd = this.percent.PD > 0 ? this.percent.PD : 1;
+      if (key === "CH") {
+        if (this.percent.OLD === 0) return this.showError(5);
+        this.percent.CH = (Math.pow(this.percent.NEW / this.percent.OLD, 1 / pd) - 1) * 100;
+      } else if (key === "NEW") {
+        this.percent.NEW = this.percent.OLD * Math.pow(1 + this.percent.CH / 100, pd);
+      } else if (key === "OLD") {
+        this.percent.OLD = this.percent.NEW / Math.pow(1 + this.percent.CH / 100, pd);
+      } else if (key === "PD") {
+        if (this.percent.OLD <= 0 || this.percent.NEW <= 0 || this.percent.CH === 0) return this.showError(5);
+        this.percent.PD = Math.log(this.percent.NEW / this.percent.OLD) / Math.log(1 + this.percent.CH / 100);
+      }
+      this.entering = false;
+      this.valueReady = false;
+      this.lastAnswer = this.percent[key];
+      return this.showPercent();
+    }
+
+    enterInterest() {
+      this.mode = "interest";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showInterest();
+    }
+
+    interestVars() {
+      return ["NOM", "EFF", "CY"];
+    }
+
+    showInterest() {
+      const key = this.interestVars()[this.modeIndex];
+      const label = key === "CY" ? "C/Y=" : `${key}=`;
+      this.display = this.makeDisplay({ label, value: this.interest[key], mode: "I CONV" });
+      return this.display;
+    }
+
+    enterInterestValue() {
+      if (this.entering || this.valueReady) {
+        const key = this.interestVars()[this.modeIndex];
+        this.interest[key] = key === "CY" ? Math.max(1, this.currentValue()) : this.currentValue();
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showInterest();
+    }
+
+    computeInterest() {
+      const key = this.interestVars()[this.modeIndex];
+      const cy = this.interest.CY || 1;
+      if (key === "EFF") {
+        this.interest.EFF = (Math.pow(1 + this.interest.NOM / 100 / cy, cy) - 1) * 100;
+      } else if (key === "NOM") {
+        this.interest.NOM = cy * (Math.pow(1 + this.interest.EFF / 100, 1 / cy) - 1) * 100;
+      }
+      this.lastAnswer = this.interest[key];
+      return this.showInterest();
+    }
+
+    enterDate() {
+      this.mode = "date";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showDate();
+    }
+
+    dateVars() {
+      return ["DT1", "DT2", "DBD", "METHOD"];
+    }
+
+    showDate() {
+      const key = this.dateVars()[this.modeIndex];
+      if (key === "DBD") this.computeDateDBD();
+      const label = key === "METHOD" ? this.date.method : `${key}=`;
+      const value = key === "METHOD" ? NaN : this.date[key];
+      this.display = this.makeDisplay({
+        label,
+        text: key === "METHOD" ? "" : key === "DBD" ? this.formatNumber(value) : this.formatDateNumber(value),
+        rawValue: value,
+        mode: "DATE",
+        status: key === "METHOD" ? "SET" : "",
+      });
+      return this.display;
+    }
+
+    enterDateValue() {
+      if (this.entering || this.valueReady) {
+        const key = this.dateVars()[this.modeIndex];
+        if (key === "DT1" || key === "DT2") this.date[key] = this.parseDateEntry(String(this.currentValue()));
+        if (key === "DBD") this.date.DBD = Math.round(this.currentValue());
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showDate();
+    }
+
+    parseDateEntry(text) {
+      const value = Number(text);
+      const whole = Math.floor(value);
+      const frac = Math.round((value - whole) * 10000);
+      const a = whole;
+      const b = Math.floor(frac / 100);
+      const c = frac % 100;
+      const year = c >= 80 ? 1900 + c : 2000 + c;
+      if (this.settings.date === "US") return year * 10000 + a * 100 + b;
+      return year * 10000 + b * 100 + a;
+    }
+
+    dateObject(yyyymmdd) {
+      const y = Math.floor(yyyymmdd / 10000);
+      const m = Math.floor((yyyymmdd % 10000) / 100);
+      const d = yyyymmdd % 100;
+      return new Date(Date.UTC(y, m - 1, d));
+    }
+
+    computeDateDBD() {
+      if (this.date.method === "360") {
+        const y1 = Math.floor(this.date.DT1 / 10000);
+        const m1 = Math.floor((this.date.DT1 % 10000) / 100);
+        const d1 = Math.min(this.date.DT1 % 100, 30);
+        const y2 = Math.floor(this.date.DT2 / 10000);
+        const m2 = Math.floor((this.date.DT2 % 10000) / 100);
+        const d2 = Math.min(this.date.DT2 % 100, 30);
+        this.date.DBD = (y2 - y1) * 360 + (m2 - m1) * 30 + d2 - d1;
+      } else {
+        this.date.DBD = Math.round((this.dateObject(this.date.DT2) - this.dateObject(this.date.DT1)) / 86400000);
+      }
+    }
+
+    enterProfit() {
+      this.mode = "profit";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showProfit();
+    }
+
+    profitVars() {
+      return ["CST", "SEL", "MAR"];
+    }
+
+    showProfit() {
+      const key = this.profitVars()[this.modeIndex];
+      this.display = this.makeDisplay({ label: `${key}=`, value: this.profit[key], mode: "PROFIT" });
+      return this.display;
+    }
+
+    enterProfitValue() {
+      if (this.entering || this.valueReady) {
+        this.profit[this.profitVars()[this.modeIndex]] = this.currentValue();
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showProfit();
+    }
+
+    computeProfit() {
+      const key = this.profitVars()[this.modeIndex];
+      if (key === "MAR") this.profit.MAR = this.profit.SEL === 0 ? NaN : (this.profit.SEL - this.profit.CST) / this.profit.SEL * 100;
+      if (key === "SEL") this.profit.SEL = this.profit.MAR === 100 ? NaN : this.profit.CST / (1 - this.profit.MAR / 100);
+      if (key === "CST") this.profit.CST = this.profit.SEL * (1 - this.profit.MAR / 100);
+      if (!Number.isFinite(this.profit[key])) return this.showError(5);
+      this.lastAnswer = this.profit[key];
+      return this.showProfit();
+    }
+
+    enterBreakeven() {
+      this.mode = "breakeven";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showBreakeven();
+    }
+
+    breakevenVars() {
+      return ["FC", "VC", "P", "Q", "PRF"];
+    }
+
+    showBreakeven() {
+      const key = this.breakevenVars()[this.modeIndex];
+      this.display = this.makeDisplay({ label: `${key}=`, value: this.breakeven[key], mode: "BRKEVN" });
+      return this.display;
+    }
+
+    enterBreakevenValue() {
+      if (this.entering || this.valueReady) {
+        this.breakeven[this.breakevenVars()[this.modeIndex]] = this.currentValue();
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showBreakeven();
+    }
+
+    computeBreakeven() {
+      const key = this.breakevenVars()[this.modeIndex];
+      const b = this.breakeven;
+      if (key === "PRF") b.PRF = b.Q * (b.P - b.VC) - b.FC;
+      if (key === "Q") b.Q = b.P === b.VC ? NaN : (b.FC + b.PRF) / (b.P - b.VC);
+      if (key === "P") b.P = b.Q === 0 ? NaN : (b.FC + b.PRF) / b.Q + b.VC;
+      if (key === "VC") b.VC = b.P - (b.FC + b.PRF) / b.Q;
+      if (key === "FC") b.FC = b.Q * (b.P - b.VC) - b.PRF;
+      if (!Number.isFinite(b[key])) return this.showError(5);
+      this.lastAnswer = b[key];
+      return this.showBreakeven();
+    }
+
+    enterBond() {
+      this.mode = "bond";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showBond();
+    }
+
+    bondVars() {
+      return ["SDT", "CPN", "RDT", "RV", "DAY", "CPY", "YLD", "PRI", "AI"];
+    }
+
+    showBond() {
+      const key = this.bondVars()[this.modeIndex];
+      if (key === "AI" && !Number.isFinite(this.computeBondAI())) return this.showError(6);
+      if (key === "DAY") return this.display = this.makeDisplay({ label: this.bond.dayCount, text: "", mode: "BOND", status: "SET" });
+      if (key === "CPY") return this.display = this.makeDisplay({ label: `${this.bond.coupons}/Y`, text: "", mode: "BOND", status: "SET" });
+      const raw = this.bond[key];
+      const text = key === "SDT" || key === "RDT" ? this.formatDateNumber(raw) : undefined;
+      const status = "";
+      this.display = this.makeDisplay({ label: `${key}=`, value: raw, text, rawValue: raw, mode: "BOND", status });
+      return this.display;
+    }
+
+    enterBondValue() {
+      if (this.entering || this.valueReady) {
+        const key = this.bondVars()[this.modeIndex];
+        if (key === "SDT" || key === "RDT") this.bond[key] = this.parseDateEntry(String(this.currentValue()));
+        else if (["CPN", "RV", "YLD", "PRI"].includes(key)) this.bond[key] = this.currentValue();
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showBond();
+    }
+
+    bondSchedule() {
+      const b = this.bond;
+      const settle = this.dateObject(b.SDT);
+      const maturity = this.dateObject(b.RDT);
+      const encode = d => d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+      if (encode(settle) !== b.SDT || encode(maturity) !== b.RDT || settle >= maturity
+          || settle.getUTCFullYear() < 1980 || maturity.getUTCFullYear() > 2079
+          || ![1, 2].includes(b.coupons)) return null;
+      const months = 12 / b.coupons;
+      const day = maturity.getUTCDate();
+      const endOfMonth = day === new Date(Date.UTC(maturity.getUTCFullYear(), maturity.getUTCMonth() + 1, 0)).getUTCDate();
+      const couponDate = k => {
+        const start = new Date(Date.UTC(maturity.getUTCFullYear(), maturity.getUTCMonth() - k * months, 1));
+        const last = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0)).getUTCDate();
+        return new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), endOfMonth ? last : Math.min(day, last)));
+      };
+      let n = 1;
+      while (couponDate(n) > settle) n += 1;
+      const previous = couponDate(n);
+      const next = couponDate(n - 1);
+      const days360 = (a, z) => {
+        let d1 = a.getUTCDate(), d2 = z.getUTCDate();
+        const febEnd = d => d.getUTCMonth() === 1 && d.getUTCDate() === new Date(Date.UTC(d.getUTCFullYear(), 2, 0)).getUTCDate();
+        if (febEnd(a) && febEnd(z)) d2 = 30;
+        if (febEnd(a) || d1 === 31) d1 = 30;
+        if (d2 === 31 && d1 === 30) d2 = 30;
+        return (z.getUTCFullYear() - a.getUTCFullYear()) * 360 + (z.getUTCMonth() - a.getUTCMonth()) * 30 + d2 - d1;
+      };
+      const days = b.dayCount === "360" ? days360 : (a, z) => (z - a) / 86400000;
+      const period = b.dayCount === "360" ? 360 / b.coupons : days(previous, next);
+      const accrued = days(previous, settle) / period;
+      return { n, accrued, remaining: 1 - accrued };
+    }
+
+    bondPrice(yieldPercent, schedule = this.bondSchedule()) {
+      const b = this.bond;
+      const y = yieldPercent / (100 * b.coupons);
+      if (!schedule || !Number.isFinite(y) || y <= -1 || b.CPN < 0 || b.RV <= 0) return NaN;
+      const { n, accrued, remaining } = schedule;
+      const coupon = b.CPN / b.coupons;
+      // TI uses simple interest when only the final coupon remains.
+      let dirty;
+      if (n === 1) dirty = (b.RV + coupon) / (1 + y * remaining);
+      else {
+        dirty = b.RV * Math.exp(-(n - 1 + remaining) * Math.log1p(y));
+        for (let k = 0; k < n; k += 1) dirty += coupon * Math.exp(-(k + remaining) * Math.log1p(y));
+      }
+      return dirty - coupon * accrued;
+    }
+
+    computeBond() {
+      const key = this.bondVars()[this.modeIndex];
+      const schedule = this.bondSchedule();
+      if (!schedule) return this.showError(6);
+      let result;
+      if (key === "PRI") result = this.bondPrice(this.bond.YLD, schedule);
+      else if (key === "YLD") {
+        if (this.bond.PRI <= 0 || this.bond.CPN < 0 || this.bond.RV <= 0) return this.showError(5);
+        const f = rate => this.bondPrice(rate, schedule) - this.bond.PRI;
+        const low = -100 * this.bond.coupons + 1e-9;
+        let high = 100;
+        while (f(high) > 0 && high < 1e12) high *= 2;
+        if (!(f(low) >= 0 && f(high) <= 0)) return this.showError(7);
+        result = this.bisect(f, low, high);
+      } else return this.showBond();
+      if (!Number.isFinite(result)) return this.showError(5);
+      this.bond[key] = result;
+      this.computeBondAI();
+      this.error = "";
+      this.entering = false;
+      this.valueReady = false;
+      this.lastAnswer = result;
+      return this.showBond();
+    }
+
+    computeBondAI() {
+      const schedule = this.bondSchedule();
+      this.bond.AI = schedule ? this.bond.CPN / this.bond.coupons * schedule.accrued : NaN;
+      return this.bond.AI;
+    }
+
+    enterDepreciation() {
+      this.mode = "depreciation";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showDepreciation();
+    }
+
+    depreciationVars() {
+      return ["METHOD", "LIF", "M01", "CST", "SAL", "YR", "DEP", "RBV", "RDV"];
+    }
+
+    showDepreciation() {
+      const key = this.depreciationVars()[this.modeIndex];
+      if (["DEP", "RBV", "RDV"].includes(key) && !this.computeDepreciation()) return this.showError(5);
+      if (key === "METHOD") return this.display = this.makeDisplay({ label: this.depr.method, text: ["DB", "DBX"].includes(this.depr.method) ? this.formatNumber(this.depr.DB) : "", rawValue: this.depr.DB, mode: "DEP", status: "SET" });
+      this.display = this.makeDisplay({ label: `${key}=`, value: this.depr[key], mode: "DEP" });
+      return this.display;
+    }
+
+    enterDepreciationValue() {
+      if (this.entering || this.valueReady) {
+        const key = this.depreciationVars()[this.modeIndex];
+        if (key === "METHOD" && ["DB", "DBX"].includes(this.depr.method)) {
+          if (!Number.isFinite(this.currentValue()) || this.currentValue() <= 0) return this.showError(5);
+          this.depr.DB = this.currentValue();
+        } else if (key !== "METHOD" && !["DEP", "RBV", "RDV"].includes(key)) this.depr[key] = this.currentValue();
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showDepreciation();
+    }
+
+    computeDepreciation() {
+      const { CST: cost, SAL: salvage, LIF: life, M01: month, YR: year, method, DB: db } = this.depr;
+      if (![cost, salvage, life, month, year, db].every(Number.isFinite)
+          || cost < 0 || salvage < 0 || salvage > cost || life <= 0 || life > 9999
+          || year < 1 || year > 9999 || !Number.isInteger(year) || month < 1 || month >= 13
+          || (method !== "SL" && !Number.isInteger(life)) || db <= 0) {
+        this.depr.DEP = this.depr.RBV = this.depr.RDV = NaN;
+        return false;
+      }
+      const decimals = this.settings.decimals === 9 ? 10 : this.settings.decimals;
+      const base = cost - salvage;
+      const delay = (month - 1) / 12;
+      const age = y => Math.max(0, Math.min(life, y - delay));
+      const cumulative = t => {
+        if (method === "SL") return base * t / life;
+        const whole = Math.floor(t);
+        return base * (whole * life - whole * (whole - 1) / 2 + (t - whole) * (life - whole)) / (life * (life + 1) / 2);
+      };
+      let book = cost, dep = 0;
+      for (let y = 1; y <= year; y += 1) {
+        const from = age(y - 1), to = age(y), fraction = to - from;
+        if (method === "SL" || method === "SYD") dep = cumulative(to) - cumulative(from);
+        else {
+          let annual = book * (db / 100) / life;
+          if (method === "DBX" && from < life) annual = Math.max(annual, (book - salvage) / (life - from));
+          dep = annual * fraction;
+        }
+        dep = Math.min(book - salvage, roundTo(Math.max(0, dep), decimals));
+        // SL/SYD/DBX exhaust their basis at the end, including any final partial year.
+        if (to === life && fraction > 0 && method !== "DB") dep = book - salvage;
+        book = Math.max(salvage, roundTo(book - dep, decimals));
+      }
+      this.depr.DEP = roundTo(dep, decimals);
+      this.depr.RBV = book;
+      this.depr.RDV = roundTo(book - salvage, decimals);
+      return true;
+    }
+
+    enterData() {
+      this.mode = "data";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showData();
+    }
+
+    showData() {
+      const pair = Math.floor(this.modeIndex / 2);
+      const axis = this.modeIndex % 2 === 0 ? "X" : "Y";
+      const label = `${axis}${String(pair + 1).padStart(2, "0")}=`;
+      this.display = this.makeDisplay({
+        label,
+        value: this.stats.data[pair][axis],
+        mode: "DATA",
+      });
+      return this.display;
+    }
+
+    enterDataValue() {
+      if (this.entering || this.valueReady) {
+        const pair = Math.floor(this.modeIndex / 2);
+        const axis = this.modeIndex % 2 === 0 ? "X" : "Y";
+        this.stats.data[pair][axis] = this.currentValue();
+        this.stats.count = Math.max(this.stats.count, pair + 1);
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showData();
+    }
+
+    enterStats() {
+      this.mode = "stats";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showStats();
+    }
+
+    statsVars() {
+      return ["METHOD", "n", "Xbar", "Sx", "sx", "sumX", "sumX2", "Ybar", "Sy", "sy", "sumY", "sumY2", "a", "b", "r", "X'", "Y'"];
+    }
+
+    statsRows() {
+      return this.stats.data.slice(0, this.stats.count);
+    }
+
+    weightedXRows() {
+      return this.statsRows().flatMap((row) => {
+        const freq = Math.max(0, Math.round(row.Y || 0));
+        return Array.from({ length: freq || 1 }, () => row.X);
+      });
+    }
+
+    statSummary() {
+      const rows = this.statsRows();
+      const xs = this.stats.method === "1-V" ? this.weightedXRows() : rows.map((row) => row.X);
+      const ys = rows.map((row) => row.Y);
+      const n = xs.length;
+      const sumX = xs.reduce((sum, value) => sum + value, 0);
+      const sumX2 = xs.reduce((sum, value) => sum + value * value, 0);
+      const xbar = n ? sumX / n : 0;
+      const sxPop = n ? Math.sqrt(Math.max(0, sumX2 / n - xbar * xbar)) : 0;
+      const sxSample = n > 1 ? Math.sqrt(Math.max(0, (sumX2 - n * xbar * xbar) / (n - 1))) : 0;
+      const ny = ys.length;
+      const sumY = ys.reduce((sum, value) => sum + value, 0);
+      const sumY2 = ys.reduce((sum, value) => sum + value * value, 0);
+      const ybar = ny ? sumY / ny : 0;
+      const syPop = ny ? Math.sqrt(Math.max(0, sumY2 / ny - ybar * ybar)) : 0;
+      const sySample = ny > 1 ? Math.sqrt(Math.max(0, (sumY2 - ny * ybar * ybar) / (ny - 1))) : 0;
+      let a = 0;
+      let b = 0;
+      let r = 0;
+      if (rows.length > 1 && this.stats.method !== "1-V") {
+        let tx = rows.map((row) => row.X);
+        let ty = rows.map((row) => row.Y);
+        if (this.stats.method === "Ln") tx = tx.map((value) => Math.log(value));
+        if (this.stats.method === "EXP") ty = ty.map((value) => Math.log(value));
+        if (this.stats.method === "PWR") {
+          tx = tx.map((value) => Math.log(value));
+          ty = ty.map((value) => Math.log(value));
+        }
+        if (tx.every(Number.isFinite) && ty.every(Number.isFinite)) {
+          const mx = tx.reduce((sum, value) => sum + value, 0) / tx.length;
+          const my = ty.reduce((sum, value) => sum + value, 0) / ty.length;
+          const sxx = tx.reduce((sum, value) => sum + Math.pow(value - mx, 2), 0);
+          const syy = ty.reduce((sum, value) => sum + Math.pow(value - my, 2), 0);
+          const sxy = tx.reduce((sum, value, index) => sum + (value - mx) * (ty[index] - my), 0);
+          b = sxx === 0 ? 0 : sxy / sxx;
+          a = my - b * mx;
+          r = sxx === 0 || syy === 0 ? 0 : sxy / Math.sqrt(sxx * syy);
+          if (this.stats.method === "EXP" || this.stats.method === "PWR") a = Math.exp(a);
+        }
+      }
+      return { n, sumX, sumX2, xbar, sxPop, sxSample, sumY, sumY2, ybar, syPop, sySample, a, b, r };
+    }
+
+    predictY(x, summary = this.statSummary()) {
+      if (this.stats.method === "LIN") return summary.a + summary.b * x;
+      if (this.stats.method === "Ln") return summary.a + summary.b * Math.log(x);
+      if (this.stats.method === "EXP") return summary.a * Math.exp(summary.b * x);
+      if (this.stats.method === "PWR") return summary.a * Math.pow(x, summary.b);
+      return NaN;
+    }
+
+    predictX(y, summary = this.statSummary()) {
+      if (summary.b === 0) return NaN;
+      if (this.stats.method === "LIN") return (y - summary.a) / summary.b;
+      if (this.stats.method === "Ln") return Math.exp((y - summary.a) / summary.b);
+      if (this.stats.method === "EXP") return Math.log(y / summary.a) / summary.b;
+      if (this.stats.method === "PWR") return Math.pow(y / summary.a, 1 / summary.b);
+      return NaN;
+    }
+
+    showStats() {
+      const key = this.statsVars()[this.modeIndex];
+      if (key === "METHOD") {
+        this.display = this.makeDisplay({ label: this.stats.method, text: "", mode: "STAT", status: "SET" });
+        return this.display;
+      }
+      const s = this.statSummary();
+      const values = {
+        n: s.n,
+        Xbar: s.xbar,
+        Sx: s.sxSample,
+        sx: s.sxPop,
+        sumX: s.sumX,
+        sumX2: s.sumX2,
+        Ybar: s.ybar,
+        Sy: s.sySample,
+        sy: s.syPop,
+        sumY: s.sumY,
+        sumY2: s.sumY2,
+        a: s.a,
+        b: s.b,
+        r: s.r,
+        "X'": this.stats.XP,
+        "Y'": this.stats.YP,
+      };
+      this.display = this.makeDisplay({ label: `${key}=`, value: values[key], mode: "STAT" });
+      return this.display;
+    }
+
+    enterStatsValue() {
+      if (this.entering || this.valueReady) {
+        const key = this.statsVars()[this.modeIndex];
+        if (key === "X'") this.stats.XP = this.currentValue();
+        if (key === "Y'") this.stats.YP = this.currentValue();
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showStats();
+    }
+
+    computeStats() {
+      const key = this.statsVars()[this.modeIndex];
+      const summary = this.statSummary();
+      if (key === "Y'") this.stats.YP = this.predictY(this.stats.XP, summary);
+      if (key === "X'") this.stats.XP = this.predictX(this.stats.YP, summary);
+      if ((key === "Y'" && !Number.isFinite(this.stats.YP)) || (key === "X'" && !Number.isFinite(this.stats.XP))) return this.showError(5);
+      if (key === "Y'") this.lastAnswer = this.stats.YP;
+      if (key === "X'") this.lastAnswer = this.stats.XP;
+      return this.showStats();
+    }
+
+    enterFormat() {
+      this.mode = "format";
+      this.modeIndex = 0;
+      this.entering = false;
+      this.valueReady = false;
+      return this.showFormat();
+    }
+
+    formatVars() {
+      return ["DEC", "ANGLE", "DATE", "SEP", "CALC"];
+    }
+
+    showFormat() {
+      const key = this.formatVars()[this.modeIndex];
+      let label = "";
+      let text = "";
+      if (key === "DEC") {
+        label = "DEC=";
+        text = this.settings.decimals === 9 ? "Float" : String(this.settings.decimals);
+      }
+      if (key === "ANGLE") label = this.settings.angle;
+      if (key === "DATE") label = this.settings.date;
+      if (key === "SEP") label = this.settings.separator;
+      if (key === "CALC") label = this.settings.method;
+      this.display = this.makeDisplay({ label, text, rawValue: this.settings.decimals, mode: "FORMAT", status: key === "DEC" ? "ENTER" : "SET" });
+      return this.display;
+    }
+
+    enterFormatValue() {
+      if (this.modeIndex === 0 && (this.entering || this.valueReady)) {
+        const value = Math.trunc(this.currentValue());
+        if (value < 0 || value > 9) return this.showError(5);
+        this.settings.decimals = value;
+        this.entering = false;
+        this.valueReady = false;
+      }
+      return this.showFormat();
+    }
+
+    toggleFormatSetting() {
+      const key = this.formatVars()[this.modeIndex];
+      if (key === "ANGLE") this.settings.angle = this.settings.angle === "DEG" ? "RAD" : "DEG";
+      if (key === "DATE") this.settings.date = this.settings.date === "US" ? "Eur" : "US";
+      if (key === "SEP") this.settings.separator = this.settings.separator === "US" ? "Eur" : "US";
+      if (key === "CALC") this.settings.method = this.settings.method === "CHN" ? "AOS" : "CHN";
+      return this.showFormat();
+    }
+
+    roundDisplayed() {
+      const decimals = this.settings.decimals === 9 ? 10 : this.settings.decimals;
+      const value = roundTo(this.currentValue(), decimals);
+      this.standard.value = value;
+      this.entryText = String(value);
+      this.entering = false;
+      this.valueReady = false;
+      return this.setResult(value, "ROUND");
+    }
+
+    move(direction) {
+      if (this.mode === "format") {
+        this.modeIndex = (this.modeIndex + direction + this.formatVars().length) % this.formatVars().length;
+        this.entering = false;
+        this.valueReady = false;
+        return this.showFormat();
+      }
+      if (this.mode === "py") {
+        this.modeIndex = (this.modeIndex + direction + 2) % 2;
+        this.entering = false;
+        this.valueReady = false;
+        return this.showPY();
+      }
+      if (this.mode === "cashflow") {
+        this.modeIndex = Math.max(0, Math.min(MAX_CF * 2, this.modeIndex + direction));
+        this.entering = false;
+        this.valueReady = false;
+        return this.showCashFlow();
+      }
+      if (this.mode === "npv") {
+        this.modeIndex = (this.modeIndex + direction + 2) % 2;
+        this.entering = false;
+        this.valueReady = false;
+        return this.showNPV();
+      }
+      if (this.mode === "amort") {
+        this.modeIndex = (this.modeIndex + direction + this.amortVars().length) % this.amortVars().length;
+        this.entering = false;
+        this.valueReady = false;
+        return this.showAmort();
+      }
+      if (this.mode === "percent") {
+        this.modeIndex = (this.modeIndex + direction + this.percentVars().length) % this.percentVars().length;
+        this.entering = false;
+        this.valueReady = false;
+        return this.showPercent();
+      }
+      if (this.mode === "interest") {
+        this.modeIndex = (this.modeIndex + direction + this.interestVars().length) % this.interestVars().length;
+        this.entering = false;
+        this.valueReady = false;
+        return this.showInterest();
+      }
+      if (this.mode === "date") {
+        this.modeIndex = (this.modeIndex + direction + this.dateVars().length) % this.dateVars().length;
+        this.entering = false;
+        this.valueReady = false;
+        return this.showDate();
+      }
+      if (this.mode === "profit") {
+        this.modeIndex = (this.modeIndex + direction + this.profitVars().length) % this.profitVars().length;
+        this.entering = false;
+        this.valueReady = false;
+        return this.showProfit();
+      }
+      if (this.mode === "breakeven") {
+        this.modeIndex = (this.modeIndex + direction + this.breakevenVars().length) % this.breakevenVars().length;
+        this.entering = false;
+        this.valueReady = false;
+        return this.showBreakeven();
+      }
+      if (this.mode === "bond") {
+        this.modeIndex = (this.modeIndex + direction + this.bondVars().length) % this.bondVars().length;
+        this.entering = false;
+        this.valueReady = false;
+        return this.showBond();
+      }
+      if (this.mode === "depreciation") {
+        this.modeIndex = (this.modeIndex + direction + this.depreciationVars().length) % this.depreciationVars().length;
+        this.entering = false;
+        this.valueReady = false;
+        return this.showDepreciation();
+      }
+      if (this.mode === "data") {
+        this.modeIndex = Math.max(0, Math.min(99, this.modeIndex + direction));
+        this.entering = false;
+        this.valueReady = false;
+        return this.showData();
+      }
+      if (this.mode === "stats") {
+        this.modeIndex = (this.modeIndex + direction + this.statsVars().length) % this.statsVars().length;
+        this.entering = false;
+        this.valueReady = false;
+        return this.showStats();
+      }
+      if (this.mode === "memory") {
+        this.modeIndex = (this.modeIndex + direction + 10) % 10;
+        this.entering = false;
+        this.valueReady = false;
+        this.memoryMathOp = null;
+        return this.showMemory();
+      }
+      return this.setStatus(direction > 0 ? "DOWN" : "UP", "STANDARD");
+    }
+
+    displayEntryForMode() {
+      const label = this.display.label;
+      this.display = this.makeDisplay({
+        label,
+        text: this.formatEntry(this.entryText),
+        rawValue: this.currentValue(),
+        mode: this.modeName(),
+        status: "ENTER",
+      });
+      return this.display;
+    }
+
+    isWorksheetMode() {
+      return this.mode !== "standard" && this.mode !== "bgn";
+    }
+
+    redisplay() {
+      if (this.mode === "format") return this.showFormat();
+      if (this.mode === "py") return this.showPY();
+      if (this.mode === "cashflow") return this.showCashFlow();
+      if (this.mode === "npv") return this.showNPV();
+      if (this.mode === "irr") return this.enterIRR();
+      if (this.mode === "amort") return this.showAmort();
+      if (this.mode === "percent") return this.showPercent();
+      if (this.mode === "interest") return this.showInterest();
+      if (this.mode === "date") return this.showDate();
+      if (this.mode === "profit") return this.showProfit();
+      if (this.mode === "breakeven") return this.showBreakeven();
+      if (this.mode === "bond") return this.showBond();
+      if (this.mode === "depreciation") return this.showDepreciation();
+      if (this.mode === "data") return this.showData();
+      if (this.mode === "stats") return this.showStats();
+      if (this.mode === "memory") return this.showMemory();
+      if (this.mode === "bgn") return this.showBGN();
+      if (this.entering) return this.makeStandardEntryDisplay();
+      return this.setStandardDisplay(this.standard.value);
+    }
+
+    showError(number) {
+      this.error = `Error ${number}`;
+      this.entering = false;
+      this.valueReady = false;
+      this.cpt = false;
+      this.display = this.makeDisplay({ label: this.error, text: "", mode: "ERROR", rawValue: NaN });
+      return this.display;
+    }
+
+    modeName() {
+      const names = {
+        standard: "STANDARD",
+        format: "FORMAT",
+        py: "P/Y",
+        cashflow: "CASH FLOW",
+        npv: "NPV",
+        irr: "IRR",
+        amort: "AMORT",
+        percent: "%CHG",
+        interest: "I CONV",
+        date: "DATE",
+        profit: "PROFIT",
+        breakeven: "BRKEVN",
+        bond: "BOND",
+        depreciation: "DEP",
+        data: "DATA",
+        stats: "STAT",
+        memory: "MEMORY",
+        bgn: "BGN",
+      };
+      return names[this.mode] || "STANDARD";
+    }
+
+    makeDisplay({ label = "", value = 0, text, rawValue, mode = "STANDARD", status = "" }) {
+      const actualValue = rawValue === undefined ? value : rawValue;
+      return {
+        label,
+        main: text === undefined ? this.formatNumber(value) : text,
+        rawValue: actualValue,
+        mode,
+        status,
+        indicators: this.indicators(),
+      };
+    }
+
+    indicators() {
+      const out = [];
+      if (this.second) out.push("2nd");
+      if (this.inverseTrig) out.push("INV");
+      if (this.hyperbolicTrig) out.push("HYP");
+      if (this.cpt) out.push("COMPUTE");
+      if (this.entering) out.push("ENTER");
+      if (this.tvm.BGN) out.push("BGN");
+      if (this.settings.angle === "RAD") out.push("RAD");
+      if (this.mode !== "standard") out.push("up/down");
+      return out;
+    }
+
+    formatEntry(text) {
+      if (text === "-" || text.endsWith(".")) return text;
+      const value = Number(text);
+      if (!Number.isFinite(value)) return text;
+      const parts = text.split(".");
+      const decimals = parts[1] === undefined ? 0 : parts[1].length;
+      return this.formatNumber(value, decimals, true);
+    }
+
+    formatNumber(value, overrideDecimals, preserveDecimals) {
+      if (!Number.isFinite(value)) return "";
+      const decimals = overrideDecimals ?? (this.settings.decimals === 9 ? null : this.settings.decimals);
+      const abs = Math.abs(value);
+      if (abs >= 1e10 || (abs > 0 && abs < 1e-9)) {
+        return value.toExponential(this.settings.decimals === 9 ? 5 : this.settings.decimals);
+      }
+      const useUS = this.settings.separator === "US";
+      const locale = useUS ? "en-US" : "de-DE";
+      if (decimals === null) {
+        // Hardware display holds 10 digits; floating mode fills what is left
+        // after the integer part (the leading 0 of 0.xxx counts as a digit).
+        const intDigits = abs >= 1 ? Math.floor(Math.log10(abs)) + 1 : 1;
+        return value.toLocaleString(locale, {
+          maximumFractionDigits: Math.max(0, 10 - intDigits),
+          useGrouping: true,
+        });
+      }
+      return value.toLocaleString(locale, {
+        minimumFractionDigits: preserveDecimals ? decimals : decimals,
+        maximumFractionDigits: decimals,
+        useGrouping: true,
+      });
+    }
+
+    formatDateNumber(yyyymmdd) {
+      if (!Number.isFinite(yyyymmdd)) return "";
+      const y = Math.floor(yyyymmdd / 10000);
+      const m = Math.floor((yyyymmdd % 10000) / 100);
+      const d = yyyymmdd % 100;
+      if (this.settings.date === "US") return `${m}-${String(d).padStart(2, "0")}-${y}`;
+      return `${d}-${String(m).padStart(2, "0")}-${y}`;
+    }
+
+    snapshot() {
+      return {
+        display: this.display,
+        settings: { ...this.settings },
+        tvm: { ...this.tvm },
+        amort: { ...this.amort },
+        cash: {
+          CF0: this.cash.CF0,
+          flows: this.cash.flows.map((flow) => ({ ...flow })),
+          I: this.cash.I,
+          NPV: this.cash.NPV,
+          IRR: this.cash.IRR,
+        },
+        percent: { ...this.percent },
+        interest: { ...this.interest },
+        date: { ...this.date },
+        profit: { ...this.profit },
+        breakeven: { ...this.breakeven },
+        stats: {
+          method: this.stats.method,
+          count: this.stats.count,
+          data: this.stats.data.map((row) => ({ ...row })),
+          XP: this.stats.XP,
+          YP: this.stats.YP,
+        },
+      };
+    }
+  }
+
+  global.BAIIEngine = BAIIEngine;
+})(window);
+  </script>
+
+  <script>
+    eval(document.getElementById("baii-engine").textContent);
+
+    const calc = new window.BAIIEngine();
+    const keyboard = document.getElementById("keyboard");
+    const displayMain = document.getElementById("displayMain");
+    const displayLabel = document.getElementById("displayLabel");
+    const displayMode = document.getElementById("displayMode");
+    const displayStatus = document.getElementById("displayStatus");
+    const indicators = document.getElementById("indicators");
+    const tvmValues = document.getElementById("tvmValues");
+    const cashValues = document.getElementById("cashValues");
+    const worksheetValues = document.getElementById("worksheetValues");
+    const formulaPanel = document.getElementById("formulaPanel");
+    const keyTape = document.getElementById("keyTape");
+    const modeHint = document.getElementById("modeHint");
+    const keyHistory = [];
+    let cptArmedBefore = false;
+
+    function keyFromButton(button) {
+      if (calc.second && button.dataset.second) return button.dataset.second;
+      return button.dataset.key;
+    }
+
+    function press(key) {
+      const armed = cptArmedBefore;
+      const modeBefore = calc.mode;
+      calc.press(key);
+      maybeShowFormula(armed, modeBefore, key);
+      cptArmedBefore = calc.cpt;
+      rememberKey(key);
+      render();
+    }
+
+    const TVM_FORMULAS = {
+      "PV": "PV = −[ PMT·(1+i·BGN)·((1+i)^N − 1)/i + FV ] / (1+i)^N",
+      "PMT": "PMT = −[ PV·(1+i)^N + FV ] / [ (1+i·BGN)·((1+i)^N − 1)/i ]",
+      "FV": "FV = −[ PV·(1+i)^N + PMT·(1+i·BGN)·((1+i)^N − 1)/i ]",
+      "N": "N = ln[ (PMT·(1+i·BGN)/i − FV) / (PV + PMT·(1+i·BGN)/i) ] / ln(1+i)",
+      "I/Y": "Solved numerically: find i such that PV·(1+i)^N + PMT·(1+i·BGN)·((1+i)^N−1)/i + FV = 0,\nthen I/Y = ((1+i)^(P/Y / C/Y) − 1) · C/Y · 100",
+    };
+
+    const WORKSHEET_FORMULAS = {
+      "npv": ["NPV", "NPV = Σ CFt / (1 + r)^t   (t = 0 … N, r = I/100)"],
+      "irr": ["IRR", "Solve for r: 0 = Σ CFt / (1 + r)^t   →   IRR = r·100"],
+      "percent": ["%CHG", "NEW = OLD · (1 + %CH/100)^#PD\n%CH = ((NEW/OLD)^(1/#PD) − 1) · 100"],
+      "interest": ["I CONV", "EFF = ((1 + NOM/(C/Y·100))^(C/Y) − 1) · 100\nNOM = C/Y · ((1+EFF/100)^(1/C/Y) − 1) · 100"],
+      "amort": ["AMORT", "INTₖ = −balanceₖ₋₁ · i (0 for the first BGN payment)\nPRNₖ = PMT − INTₖ\nBALₖ = balanceₖ₋₁ + PRNₖ\n(per-period values rounded to displayed decimals)"],
+      "profit": ["PROFIT", "MAR = (SEL − CST) / SEL · 100"],
+      "breakeven": ["BRKEVN", "PRF = Q·(P − VC) − FC"],
+      "bond": ["BOND", "Clean price = PV of remaining coupons and redemption − accrued interest.\nCoupon dates follow redemption date; ACT/ACT or 30/360 determines the fractional coupon period.\nThe last coupon period uses simple interest; earlier periods use compound discounting."],
+      "stats": ["STAT", "LIN: ŷ = a + b·x,   b = Sxy/Sxx,   a = ȳ − b·x̄"],
+    };
+
+    function maybeShowFormula(wasCptArmed, modeBefore, key) {
+      const tvmKeys = ["N", "I/Y", "PV", "PMT", "FV"];
+      if (wasCptArmed && tvmKeys.includes(key)) {
+        const body = TVM_FORMULAS[key];
+        const i = "i = (1 + I/Y / (100·C/Y))^(C/Y / P/Y) − 1   (BGN = 1 if Begin mode, else 0)";
+        formulaPanel.innerHTML = `
+          <p class="hint">Solved <em>${key}</em> using the TVM equation:</p>
+          <code>${body}</code>
+          <p class="hint">At zero interest, the equation is PV + N·PMT + FV = 0.</p>
+          <p class="hint" style="margin-top:8px;">Periodic rate:</p>
+          <code>${i}</code>`;
+        return;
+      }
+      if (key === "CPT" && WORKSHEET_FORMULAS[modeBefore]) {
+        const [label, body] = WORKSHEET_FORMULAS[modeBefore];
+        formulaPanel.innerHTML = `
+          <p class="hint">Computed in the <em>${label}</em> worksheet:</p>
+          <code>${body}</code>`;
+      }
+    }
+
+    function rememberKey(key) {
+      keyHistory.push(key);
+      if (keyHistory.length > 28) keyHistory.shift();
+    }
+
+    const PANEL_FOR_MODE = {
+      "TVM": "TVM",
+      "P/Y": "TVM",
+      "BGN": "TVM",
+      "AMORT": "TVM",
+      "CASH FLOW": "CASH FLOW",
+      "NPV": "CASH FLOW",
+      "IRR": "CASH FLOW",
+      "%CHG": "WORKSHEET",
+      "I CONV": "WORKSHEET",
+      "MEMORY": "WORKSHEET",
+      "DATE": "WORKSHEET",
+      "PROFIT": "WORKSHEET",
+      "BRKEVN": "WORKSHEET",
+      "BOND": "WORKSHEET",
+      "DEP": "WORKSHEET",
+      "DATA": "WORKSHEET",
+      "STAT": "WORKSHEET",
+    };
+
+    function highlightPanels(state) {
+      const target = PANEL_FOR_MODE[state.display.mode];
+      document.querySelectorAll(".panel[data-panel]").forEach((panel) => {
+        const name = panel.dataset.panel;
+        const isActive = target === name;
+        const isFormula = name === "FORMULA";
+        panel.classList.toggle("is-active", isActive);
+        panel.classList.toggle("is-dim", !!target && !isActive && !isFormula);
+      });
+    }
+
+    const pyBadge = document.getElementById("pyBadge");
+    function render() {
+      const state = calc.snapshot();
+      pyBadge.hidden = !calc.power;
+      pyBadge.textContent = `P/Y ${state.tvm.PY} · C/Y ${state.tvm.CY}`;
+      displayMain.textContent = state.display.main;
+      displayLabel.textContent = state.display.label;
+      displayMode.textContent = state.display.mode;
+      displayStatus.textContent = state.display.status || "";
+      const active = new Set(state.display.indicators.map((item) => item.toUpperCase()));
+      const labels = ["2ND", "INV", "HYP", "COMPUTE", "ENTER", "SET", "UP/DN", "DEL", "INS", "BGN", "END", "RAD"];
+      indicators.innerHTML = labels.map((label) => {
+        const isOn = active.has(label) || (label === "UP/DN" && active.has("UP/DOWN")) || (label === "2ND" && active.has("2ND")) || (label === "END" && !active.has("BGN"));
+        return `<span class="indicator${isOn ? " on" : ""}">${label}</span>`;
+      }).join("");
+      document.querySelectorAll(".key").forEach((button) => {
+        button.classList.toggle("second-active", calc.second && !!button.dataset.second);
+      });
+      renderTVM(state);
+      renderCash(state);
+      renderWorksheet(state);
+      renderTeachingAids(state);
+      highlightPanels(state);
+    }
+
+    function renderTeachingAids(state) {
+      keyTape.innerHTML = keyHistory.length
+        ? keyHistory.map((key) => `<span class="key-chip">${key}</span>`).join("")
+        : '<span class="small">No keys pressed yet.</span>';
+      const hints = {
+        "STANDARD": "Standard mode uses BA II Plus chain logic. Use FORMAT to switch to AOS only when you want operator precedence.",
+        "TVM": "TVM stores N, I/Y, PV, PMT, and FV. Enter known values first, then press CPT and the unknown variable.",
+        "P/Y": "本课程使用 P/Y = C/Y = 1，I/Y 输入每期利率（百分数），N 输入期数。若使用 P/Y = C/Y = 12，I/Y 应输入按月复利的年名义利率，不要再除以 12。",
+        "CASH FLOW": "Cash-flow worksheet alternates Cnn and Fnn. Fnn is the frequency for repeated equal cash flows.",
+        "NPV": "Enter discount rate at I, move down to NPV, then press CPT.",
+        "IRR": calc.cash.IRRCount > 1 ? `发现 ${calc.cash.IRRCount} 个 IRR，显示绝对值最小的一个。非常规现金流不能仅凭一个 IRR 决策，请结合 NPV。` : "IRR uses the current cash-flow worksheet. At least one sign change is required.",
+        "ERROR": calc.error === "Error 7" ? "数值求解未收敛或超出求解范围；这不代表没有解。请检查输入，并用 NPV 核对非常规现金流。" : "请检查输入、现金流正负号及 P/Y、C/Y、BGN/END 设置。按 CE/C 清除错误后重新输入。",
+        "AMORT": "Set P1 and P2, then move down to BAL, PRN, and INT for the selected payment range.",
+        "%CHG": "Percent-change worksheet solves OLD, NEW, %CH, or #PD depending on the cursor location.",
+        "MEMORY": "Memory worksheet shows M0 through M9. Enter a value and press ENTER to store it.",
+      };
+      modeHint.textContent = hints[state.display.mode] || "Use the up and down keys to inspect worksheet variables.";
+    }
+
+    function fmt(value) {
+      return calc.formatNumber(value);
+    }
+
+    function renderTVM(state) {
+      const rows = [
+        ["N", state.tvm.N],
+        ["I/Y", state.tvm.IY],
+        ["PV", state.tvm.PV],
+        ["PMT", state.tvm.PMT],
+        ["FV", state.tvm.FV],
+        ["P/Y", state.tvm.PY],
+        ["C/Y", state.tvm.CY],
+        ["Mode", state.tvm.BGN ? "BGN" : "END"],
+      ];
+      tvmValues.innerHTML = rows.map(([label, value]) => (
+        `<div class="value"><b>${label}</b><span>${typeof value === "number" ? fmt(value) : value}</span></div>`
+      )).join("");
+    }
+
+    function renderCash(state) {
+      const rows = [{ label: "CFo", c: state.cash.CF0, f: "" }];
+      state.cash.flows.forEach((flow, index) => {
+        if (Math.abs(flow.C) > 1e-10 || index < 3) {
+          rows.push({ label: `C${String(index + 1).padStart(2, "0")}`, c: flow.C, f: flow.F });
+        }
+      });
+      cashValues.innerHTML = rows.map((row) => (
+        `<div class="cash-row"><b>${row.label}</b><span>${fmt(row.c)}</span><span>${row.f}</span></div>`
+      )).join("");
+    }
+
+    function renderWorksheet(state) {
+      const rows = [
+        ["NPV I", state.cash.I],
+        ["NPV", state.cash.NPV],
+        ["IRR", state.cash.IRR],
+        ["P1", state.amort.P1],
+        ["P2", state.amort.P2],
+        ["BAL", state.amort.BAL],
+        ["PRN", state.amort.PRN],
+        ["INT", state.amort.INT],
+        ["OLD", state.percent.OLD],
+        ["NEW", state.percent.NEW],
+        ["%CH", state.percent.CH],
+        ["NOM", state.interest.NOM],
+        ["EFF", state.interest.EFF],
+      ];
+      worksheetValues.innerHTML = rows.map(([label, value]) => (
+        `<div class="value"><b>${label}</b><span>${fmt(value)}</span></div>`
+      )).join("");
+    }
+
+    keyboard.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-key]");
+      if (!button) return;
+      const key = keyFromButton(button);
+      press(key);
+    });
+
+    const keyboardMap = {
+      "0": "0", "1": "1", "2": "2", "3": "3", "4": "4",
+      "5": "5", "6": "6", "7": "7", "8": "8", "9": "9",
+      ".": ".", "+": "+", "-": "-", "*": "x", "/": "/",
+      "=": "=", "Backspace": "RIGHT", "Escape": "CE/C",
+      "_": "+/-", "ArrowUp": "UP", "ArrowDown": "DOWN",
+      "n": "N", "i": "I/Y", "p": "PV", "m": "PMT", "f": "FV",
+      "c": "CPT", "s": "2ND", "r": "RCL",
+    };
+    // Physical mapping of 2ND + a key, taken from the keypad itself.
+    const secondOf = {};
+    document.querySelectorAll("button[data-key][data-second]").forEach((b) => { secondOf[b.dataset.key] = b.dataset.second; });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      const tag = (event.target && event.target.tagName) || "";
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      let key = event.key === "Enter"
+        ? (calc.mode === "standard" && !calc.second ? "=" : "ENTER")
+        : keyboardMap[event.key.length === 1 ? event.key.toLowerCase() : event.key];
+      if (!key) return;
+      event.preventDefault();
+      if (calc.second && secondOf[key]) key = secondOf[key];
+      press(key);
+    });
+
+    const examples = [
+      {
+        id: "setup",
+        title: "0 · Always first — clear and P/Y = 1",
+        steps: [
+          { keys: ["2ND", "RESET", "ENTER"], note: "Reset worksheets. Do this when the calculator looks haunted." },
+          { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT"], note: "House rule: P/Y = 1. I/Y will be the periodic percent; N is the number of periods." },
+        ],
+      },
+      {
+        id: "pv",
+        title: "1 · PV — $2,000 in 4 years at 6% (lecture 4)",
+        steps: [
+          { keys: ["2ND", "CLR TVM"], note: "Clear TVM registers. Leftover FV from the last problem is the classic own-goal." },
+          { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT"], note: "Recipe step 2: confirm P/Y = 1. A new calculator (and RESET) starts at P/Y = 12." },
+          { keys: ["4", "N"], note: "N = 4 years." },
+          { keys: ["6", "I/Y"], note: "I/Y = 6 (percent, not 0.06)." },
+          { keys: ["0", "PMT"], note: "PMT = 0 (a single future cash flow)." },
+          { keys: ["2", "0", "0", "0", "FV"], note: "FV = +2,000 (cash you will receive)." },
+          { keys: ["CPT", "PV"], note: "PV ≈ −1,584.19. Negative: you would pay that today to buy the $2,000." },
+        ],
+      },
+      {
+        id: "lisi",
+        title: "2 · PMT — LiSi’s 20-year loan (lecture 4)",
+        steps: [
+          { keys: ["2ND", "CLR TVM"], note: "Clear TVM before a new problem." },
+          { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT"], note: "Recipe step 2: confirm P/Y = 1." },
+          { keys: ["2", "0", "N"], note: "N = 20 annual payments." },
+          { keys: ["5", "I/Y"], note: "I/Y = 5 percent per year." },
+          { keys: ["1", "0", "0", "0", "0", "0", "0", "PV"], note: "PV = +1,000,000 (the loan is cash in today)." },
+          { keys: ["0", "FV"], note: "FV = 0 (paid off)." },
+          { keys: ["CPT", "PMT"], note: "PMT ≈ −80,242.59. Negative: LiSi writes the check." },
+        ],
+      },
+      {
+        id: "monthly",
+        title: "3 · Monthly stream — textbook Example 4.14 (lecture 4)",
+        steps: [
+          { keys: ["2ND", "CLR TVM"], note: "Clear TVM." },
+          { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT"], note: "Confirm P/Y = 1. The monthly rate is given, so I/Y is the monthly percent." },
+          { keys: ["4", "8", "N"], note: "N = 48 months." },
+          { keys: ["0", ".", "5", "I/Y"], note: "I/Y = 0.5 (half a percent per month)." },
+          { keys: ["5", "0", "0", "+/-", "PMT"], note: "PMT = −500 (you pay each month)." },
+          { keys: ["0", "FV"], note: "FV = 0." },
+          { keys: ["CPT", "PV"], note: "PV ≈ +21,290.16. Paying $20,000 cash instead saves about $1,290 today." },
+        ],
+      },
+      {
+        id: "n-iy",
+        title: "4 · The other two keys — CPT N, then CPT I/Y (lecture 4)",
+        steps: [
+          { keys: ["2ND", "CLR TVM"], note: "Clear TVM. $1,000 today grows to $2,000 at 10%: how long?" },
+          { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT"], note: "Confirm P/Y = 1." },
+          { keys: ["1", "0", "I/Y"], note: "I/Y = 10." },
+          { keys: ["1", "0", "0", "0", "+/-", "PV"], note: "PV = −1,000 (you invest)." },
+          { keys: ["0", "PMT"], note: "PMT = 0." },
+          { keys: ["2", "0", "0", "0", "FV"], note: "FV = +2,000 (you receive)." },
+          { keys: ["CPT", "N"], note: "N ≈ 7.27 years (ln 2 / ln 1.1). Year-end withdrawals: first year with $2,000 is Year 8." },
+          { keys: ["6", "N"], note: "Now ask the other question: what rate turns $1,000 into $2,000 in six years? N = 6." },
+          { keys: ["CPT", "I/Y"], note: "I/Y ≈ 12.25 percent: 2^(1/6) − 1. The IRR of the investment (textbook §4.9)." },
+        ],
+      },
+      {
+        id: "car",
+        title: "5 · Preview of lecture 5 — ZhangSan's car, 60 months, 6.75% APR",
+        steps: [
+          { keys: ["2ND", "CLR TVM"], note: "Clear TVM." },
+          { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT"], note: "Confirm P/Y = 1 so I/Y is the monthly percent." },
+          { keys: ["6", "0", "N"], note: "N = 60 months." },
+          { keys: ["0", ".", "5", "6", "2", "5", "I/Y"], note: "I/Y = 6.75 / 12 = 0.5625 (monthly). Not 6.75." },
+          { keys: ["3", "0", "0", "0", "0", "PV"], note: "PV = +30,000 (the loan, cash in)." },
+          { keys: ["0", "FV"], note: "FV = 0." },
+          { keys: ["CPT", "PMT"], note: "PMT ≈ −590.50. Same number as lecture 5." },
+        ],
+      },
+      {
+        id: "trap-clr",
+        section: "Traps — what a wrong setup looks like",
+        title: "T1 · Forgot CLR TVM: last problem's FV is still there",
+        steps: [
+          { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT", "2ND", "CLR TVM"], note: "Start clean: P/Y = 1, registers cleared." },
+          { keys: ["4", "N", "6", "I/Y", "0", "PMT", "2", "0", "0", "0", "FV", "CPT", "PV"], note: "Example 1 again: PV = −1,584.19. Now FV = 2,000 sits in the machine." },
+          { keys: ["2", "0", "N", "5", "I/Y", "1", "0", "0", "0", "0", "0", "0", "PV", "CPT", "PMT"], note: "LiSi's loan typed straight after, without clearing: −80,303.07. Wrong. The calculator is repaying $1M AND paying a $2,000 balloon." },
+          { keys: ["2ND", "CLR TVM", "2", "0", "N", "5", "I/Y", "1", "0", "0", "0", "0", "0", "0", "PV", "0", "FV", "CPT", "PMT"], note: "Clear, retype, FV = 0: −80,242.59. Step 1 of the recipe, every time." },
+        ],
+      },
+      {
+        id: "trap-py",
+        section: "Traps — what a wrong setup looks like",
+        title: "T2 · P/Y still at the factory 12",
+        steps: [
+          { keys: ["2ND", "RESET", "ENTER"], note: "A fresh (or reset) calculator: P/Y = 12. Nothing on the screen tells you." },
+          { keys: ["2ND", "CLR TVM", "2", "0", "N", "5", "I/Y", "1", "0", "0", "0", "0", "0", "0", "PV", "0", "FV", "CPT", "PMT"], note: "LiSi's loan with P/Y = 12: −52,216.30. The 5 was split into 5/12 percent per period: a 20-month loan at 0.42% a month." },
+          { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT", "CPT", "PMT"], note: "Set P/Y = 1 and recompute: −80,242.59. Same registers, right rate." },
+        ],
+      },
+      {
+        id: "trap-bgn",
+        section: "Traps — what a wrong setup looks like",
+        title: "T3 · BGN left on",
+        steps: [
+          { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT", "2ND", "CLR TVM"], note: "Start clean." },
+          { keys: ["1", "0", "N", "8", "I/Y", "5", "0", "0", "0", "0", "+/-", "PMT", "0", "FV", "CPT", "PV"], note: "Quiz 2: $50,000 a year for 10 years at 8%, ordinary: PV = 335,504.07." },
+          { keys: ["2ND", "BGN", "2ND", "SET", "2ND", "QUIT", "CPT", "PV"], note: "Same registers with BGN on: 362,344.40. Every payment moved one year earlier, so the loan is worth 8% more. Look for the BGN indicator before you press CPT." },
+          { keys: ["2ND", "BGN", "2ND", "SET", "2ND", "QUIT", "CPT", "PV"], note: "SET again returns to END: 335,504.07." },
+        ],
+      },
+    ];
+
+    // ---------- Practice problems: answers hidden until checked ----------
+    const practice = [
+      {
+        id: "p1",
+        title: "P1 · Grow a lump sum",
+        problem: "$5,000 today grows at 8% a year. What is it worth in 10 years? (Review Quiz 1)",
+        solve: "FV",
+        tvm: { N: 10, IY: 8, PV: -5000, PMT: 0, FV: 10794.62 },
+        signNote: "you invest today, so PV and FV carry opposite signs",
+        hint: "Timeline: one outflow today, one inflow at year 10. N = 10, I/Y = 8, PV = −5,000, PMT = 0. Then CPT FV.",
+        answer: "FV = +10,794.62 = 5,000 × 1.08^10.",
+      },
+      {
+        id: "p2",
+        title: "P2 · How much can he borrow?",
+        problem: "ZhangSan can pay $50,000 at the end of each year for 10 years. The borrowing rate is 8%. What loan can he take today? (Review Quiz 2)",
+        solve: "PV",
+        tvm: { N: 10, IY: 8, PV: 335504.07, PMT: -50000, FV: 0 },
+        signNote: "he receives the loan and pays the installments, so PV and PMT carry opposite signs",
+        hint: "N = 10, I/Y = 8, PMT = −50,000 (he pays), FV = 0 (paid off). Then CPT PV.",
+        answer: "PV = +335,504.07 = 50,000 × (1 − 1.08^−10) / 0.08.",
+      },
+      {
+        id: "p3",
+        title: "P3 · Deposit, then withdraw (textbook Example 4.13)",
+        problem: "You put $20,000 in an account paying 8% and withdraw $2,000 at the end of each year for 15 years. How much is left after the 15th withdrawal?",
+        solve: "FV",
+        tvm: { N: 15, IY: 8, PV: -20000, PMT: 2000, FV: 9139.15 },
+        signNote: "the deposit and the withdrawals flow in opposite directions",
+        hint: "Three cash flows this time. N = 15, I/Y = 8, PV = −20,000 (deposit), PMT = +2,000 (withdrawals). Then CPT FV.",
+        answer: "FV = +9,139.15: the $63,443 the deposit grows to, minus the $54,304 the withdrawals add up to with interest.",
+      },
+      {
+        id: "p4",
+        title: "P4 · A monthly rate, given (textbook §4.7)",
+        problem: "A credit card charges 2% per month. You owe $1,000 today and make no payments for six months. What is the balance then?",
+        solve: "FV",
+        tvm: { N: 6, IY: 2, PV: 1000, PMT: 0, FV: -1126.16 },
+        signNote: "the balance you owe now and the balance you owe later carry opposite signs on the timeline",
+        hint: "Monthly rate, N in months: N = 6, I/Y = 2, PV = 1,000 (or −1,000: either way), PMT = 0. Then CPT FV.",
+        answer: "FV = 1,126.16 in absolute value = 1,000 × 1.02^6. No division by 12 here: the 2% is already a monthly rate.",
+      },
+      {
+        id: "p5",
+        title: "P5 · What rate did you earn?",
+        problem: "$5,000 invested today is worth $8,000 after six years. What annual rate of return is that?",
+        solve: "IY",
+        tvm: { N: 6, IY: 8.15, PV: -5000, PMT: 0, FV: 8000 },
+        signNote: "money out today, money in at year six",
+        hint: "N = 6, PV = −5,000, PMT = 0, FV = 8,000. Then CPT I/Y. If you see Error 5, check cash-flow signs and inputs.",
+        answer: "I/Y = 8.15 percent = (8,000 / 5,000)^(1/6) − 1.",
+      },
+    ];
+    const practiceState = {};
+    const TVM_LABEL = { N: "N", IY: "I/Y", PV: "PV", PMT: "PMT", FV: "FV" };
+    const CASH = ["PV", "PMT", "FV"];
+
+    function fmtMoney(v) {
+      return calc.formatNumber ? calc.formatNumber(v) : String(v);
+    }
+
+    function checkPractice(ex) {
+      const t = calc.tvm;
+      const problems = [];
+      if (t.PY !== 1) problems.push(`P/Y is ${t.PY}. House rule: P/Y = C/Y = 1 (2ND I/Y, 1, ENTER, 2ND CPT).`);
+      if (t.CY !== 1) problems.push(`C/Y is ${t.CY}. 本题要求 C/Y = 1：按 2ND I/Y → DOWN → 1 → ENTER → 2ND CPT，再计算。`);
+      if (t.BGN) problems.push("BGN is on, but these payments are end-of-period. Set END (2ND PMT, 2ND ENTER, 2ND CPT).");
+
+      // Either sign viewpoint is fine: pick the orientation that fits the cash-flow registers best.
+      const known = Object.keys(ex.tvm).filter((k) => k !== ex.solve);
+      const tolOf = (k) => (k === "N" || k === "IY" ? 0.005 : 0.5);
+      const mismatches = (sgn) => known.filter((k) => {
+        const want = CASH.includes(k) ? sgn * ex.tvm[k] : ex.tvm[k];
+        return Math.abs(t[k] - want) > tolOf(k);
+      });
+      const plus = mismatches(1);
+      const minus = mismatches(-1);
+      const sgn = minus.length < plus.length ? -1 : 1;
+      const wrong = sgn === 1 ? plus : minus;
+
+      wrong.forEach((k) => {
+        const want = CASH.includes(k) ? sgn * ex.tvm[k] : ex.tvm[k];
+        const have = t[k];
+        if (CASH.includes(k) && Math.abs(Math.abs(have) - Math.abs(want)) <= tolOf(k)) {
+          problems.push(`${TVM_LABEL[k]} has the wrong sign (${fmtMoney(have)}): ${ex.signNote}. Type the number, then +/−.`);
+        } else if (have === 0 && want !== 0) {
+          problems.push(`${TVM_LABEL[k]} is still 0. Enter ${fmtMoney(want)} and press ${TVM_LABEL[k]}.`);
+        } else {
+          problems.push(`${TVM_LABEL[k]} is ${fmtMoney(have)}; the problem needs ${fmtMoney(want)}.`);
+        }
+      });
+
+      const wantSolved = CASH.includes(ex.solve) ? sgn * ex.tvm[ex.solve] : ex.tvm[ex.solve];
+      const solvedLabel = `${TVM_LABEL[ex.solve]}=`;
+      const solvedTol = ex.solve === "IY" ? 0.01 : 0.01;
+      const shown = calc.display.rawValue;
+      const displayOK = calc.display.label === solvedLabel && Number.isFinite(shown) && Math.abs(shown - wantSolved) <= solvedTol;
+
+      if (problems.length === 0) {
+        if (displayOK) return { ok: true, text: `Correct. ${solvedLabel} ${fmtMoney(wantSolved)}.` };
+        if (calc.display.label === "Error 5") return { ok: false, text: "Error 5: no solution for these inputs. Check cash-flow signs, amounts and settings, then compute again." };
+        if (calc.display.label !== solvedLabel) return { ok: false, text: `Registers are right. Now press CPT, then ${TVM_LABEL[ex.solve]}.` };
+        return { ok: false, text: `Registers are right, but the display is stale. Press CPT ${TVM_LABEL[ex.solve]} again.` };
+      }
+      return { ok: false, text: problems.join("\n") };
+    }
+
+    const practiceCards = document.getElementById("practiceCards");
+
+    function renderPracticeCards() {
+      practiceCards.innerHTML = practice.map((ex) => {
+        const st = practiceState[ex.id] || (practiceState[ex.id] = { hint: false, answer: false, feedback: null });
+        const fb = st.feedback;
+        return `
+          <div class="example-card" data-practice="${ex.id}">
+            <div class="example-title">${ex.title}</div>
+            <div class="practice-problem">${ex.problem}</div>
+            ${st.hint ? `<div class="example-note"><b>Hint.</b> ${ex.hint}</div>` : ""}
+            <div class="practice-feedback${fb ? (fb.ok ? " ok" : " bad") : ""}"${fb ? "" : " hidden"}>${fb ? fb.text : ""}</div>
+            ${st.answer ? `<div class="example-note"><b>Answer.</b> ${ex.answer}</div>` : ""}
+            <div class="example-actions">
+              <button data-paction="hint">${st.hint ? "Hide hint" : "Hint"}</button>
+              <button data-paction="check">Check</button>
+              <button data-paction="answer"${st.answer ? "" : (st.tries >= 2 ? "" : " disabled")} title="${st.tries >= 2 ? "" : "Available after two checks"}">${st.answer ? "Hide answer" : "Answer"}</button>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    practiceCards.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-paction]");
+      if (!button) return;
+      const id = button.closest(".example-card").dataset.practice;
+      const ex = practice.find((x) => x.id === id);
+      const st = practiceState[id];
+      const action = button.dataset.paction;
+      if (action === "hint") st.hint = !st.hint;
+      if (action === "check") { st.feedback = checkPractice(ex); st.tries = (st.tries || 0) + 1; }
+      if (action === "answer") st.answer = !st.answer;
+      renderPracticeCards();
+    });
+
+    const exampleCards = document.getElementById("exampleCards");
+    const stepperState = {};
+
+    function renderExampleCards() {
+      let lastSection = null;
+      exampleCards.innerHTML = examples.map((ex) => {
+        const s = stepperState[ex.id] || { i: 0 };
+        const heading = ex.section && ex.section !== lastSection ? `<div class="example-section">${ex.section}</div>` : "";
+        lastSection = ex.section || lastSection;
+        const total = ex.steps.length;
+        const note = s.i === 0
+          ? "Click <b>Step ▶</b> to begin."
+          : ex.steps[s.i - 1].note;
+        const done = s.i >= total;
+        return `${heading}
+          <div class="example-card${s.i > 0 && !done ? " is-running" : ""}" data-example="${ex.id}">
+            <div class="example-title">${ex.title}</div>
+            <div class="example-note">${note}</div>
+            <div class="example-progress">step ${s.i} / ${total}${done ? " — finished" : ""}</div>
+            <div class="example-actions">
+              <button data-action="restart">↺ Restart</button>
+              <button data-action="step"${done ? " disabled" : ""}>Step ▶</button>
+              <button data-action="run">Run all</button>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    function findExample(id) {
+      return examples.find((ex) => ex.id === id);
+    }
+
+    function runStep(ex, fromIndex) {
+      const step = ex.steps[fromIndex];
+      step.keys.forEach((key) => {
+        const armed = cptArmedBefore;
+        const modeBefore = calc.mode;
+        calc.press(key);
+        maybeShowFormula(armed, modeBefore, key);
+        cptArmedBefore = calc.cpt;
+        rememberKey(key);
+      });
+    }
+
+    function initializeExample() {
+      Object.values(stepperState).forEach(state => { state.i = 0; });
+      keyHistory.length = 0;
+      calc.fullReset();
+      cptArmedBefore = false;
+      formulaPanel.innerHTML = '<p class="hint">Press <b>CPT</b> on a worksheet to see the formula being applied.</p>';
+    }
+
+    exampleCards.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+      const card = button.closest(".example-card");
+      const id = card.dataset.example;
+      const ex = findExample(id);
+      const action = button.dataset.action;
+      const s = stepperState[id] || (stepperState[id] = { i: 0 });
+
+      if (action === "restart") {
+        initializeExample();
+      } else if (action === "step") {
+        if (s.i < ex.steps.length) {
+          if (s.i === 0) initializeExample();
+          runStep(ex, s.i);
+          s.i += 1;
+        }
+      } else if (action === "run") {
+        initializeExample();
+        for (let i = 0; i < ex.steps.length; i += 1) runStep(ex, i);
+        s.i = ex.steps.length;
+      }
+
+      renderExampleCards();
+      render();
+    });
+
+    renderExampleCards();
+    renderPracticeCards();
+
+    (function setupTheme() {
+      const root = document.documentElement;
+      const btn = document.getElementById("themeToggle");
+      const icon = document.getElementById("themeToggleIcon");
+      const ICONS = { light: "◐", dark: "◑" };
+      const stored = (() => { try { return localStorage.getItem("baii-theme"); } catch { return null; } })();
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const initial = stored || (prefersDark ? "dark" : "light");
+      apply(initial);
+      btn.addEventListener("click", () => {
+        const next = root.dataset.theme === "dark" ? "light" : "dark";
+        apply(next);
+        try { localStorage.setItem("baii-theme", next); } catch {}
+      });
+      function apply(theme) {
+        root.dataset.theme = theme;
+        if (icon) icon.textContent = ICONS[theme] || ICONS.light;
+      }
+    })();
+
+    render();
+  </script>
+</body>
+</html>
