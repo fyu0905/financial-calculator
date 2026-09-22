@@ -673,12 +673,6 @@
       filter: brightness(1.06);
     }
 
-    .key:active,
-    .key.is-pressed {
-      transform: translateY(1px);
-      box-shadow: none;
-    }
-
     .key .second { display: none; }
 
     .key .primary {
@@ -784,6 +778,22 @@
     /* Tall + and bottom-right =, matching the hardware's key geometry */
     .key[data-key="+"] { grid-row: span 2; }
 
+    /* Keep a press visible briefly after a click or tap has been released. */
+    .key:active,
+    .key.is-pressed {
+      transform: translateY(2px) scale(0.96);
+      filter: brightness(1.2);
+      outline: 2px solid #FFFFFF;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 5px rgba(214, 163, 60, 0.28), inset 0 2px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .key { transition: none; }
+      .key:active,
+      .key.is-pressed { transform: none; }
+    }
+
     /* Adjust 2nd-shift label color so it reads against the dark chassis */
     .key::before { color: rgba(255, 197, 130, 0.85); }
     [data-theme="dark"] .key::before,
@@ -826,7 +836,7 @@
     <section class="rail">
       <div class="panel">
         <h1>BA II Plus Simulator</h1>
-        <p class="small">Updated 22 September 2026 · 修正版 v3</p>
+        <p class="small">Updated 22 September 2026 · 修正版 v4</p>
         <p class="small">Companion to SUFE Corporate Finance, lectures 4–5. House rule: keep <b>P/Y = C/Y = 1</b>, type the <em>periodic</em> rate into I/Y (in percent), and let N be the number of periods. Cash outflows are negative.</p>
         <p class="small" style="margin-top:10px;">Start with <b>Example 0</b> (reset + P/Y = 1), then the present value, LiSi's loan, the monthly stream, the two remaining keys, and finally ZhangSan's car. <a class="source-link" href="https://education.ti.com/download/en/ed-tech/ADF11FB65B284B6195B0A7E9502784BA/D6C5319FCAE345CEABCDF34B1B11F01D/BAIIPlus_Guidebook_EN.pdf">TI guidebook</a></p>
       </div>
@@ -3251,13 +3261,25 @@
     const worksheetHelp = document.getElementById("worksheetHelp");
     const keyHistory = [];
     let cptArmedBefore = false;
+    const keyPressTimers = new WeakMap();
+
+    function showKeyPress(button) {
+      if (!button) return;
+      clearTimeout(keyPressTimers.get(button));
+      button.classList.add("is-pressed");
+      keyPressTimers.set(button, setTimeout(() => {
+        button.classList.remove("is-pressed");
+        keyPressTimers.delete(button);
+      }, 240));
+    }
 
     function keyFromButton(button) {
       if (calc.second && button.dataset.second) return button.dataset.second;
       return button.dataset.key;
     }
 
-    function press(key) {
+    function press(key, button) {
+      showKeyPress(button);
       const armed = cptArmedBefore;
       const modeBefore = calc.mode;
       calc.press(key);
@@ -3449,7 +3471,7 @@
       const button = event.target.closest("button[data-key]");
       if (!button) return;
       const key = keyFromButton(button);
-      press(key);
+      press(key, button);
     });
 
     const keyboardMap = {
@@ -3474,8 +3496,9 @@
         : keyboardMap[event.key.length === 1 ? event.key.toLowerCase() : event.key];
       if (!key) return;
       event.preventDefault();
+      const button = Array.from(keyboard.querySelectorAll("button[data-key]")).find(b => b.dataset.key === key);
       if (calc.second && secondOf[key]) key = secondOf[key];
-      press(key);
+      press(key, button);
     });
 
     const examples = [
