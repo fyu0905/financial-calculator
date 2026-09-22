@@ -836,7 +836,7 @@
     <section class="rail">
       <div class="panel">
         <h1>BA II Plus Simulator</h1>
-        <p class="small">Updated 22 September 2026 · 修正版 v4</p>
+        <p class="small">Updated 22 September 2026 · 修正版 v5</p>
         <p class="small">Companion to SUFE Corporate Finance, lectures 4–5. House rule: keep <b>P/Y = C/Y = 1</b>, type the <em>periodic</em> rate into I/Y (in percent), and let N be the number of periods. Cash outflows are negative.</p>
         <p class="small" style="margin-top:10px;">Start with <b>Example 0</b> (reset + P/Y = 1), then the present value, LiSi's loan, the monthly stream, the two remaining keys, and finally ZhangSan's car. <a class="source-link" href="https://education.ti.com/download/en/ed-tech/ADF11FB65B284B6195B0A7E9502784BA/D6C5319FCAE345CEABCDF34B1B11F01D/BAIIPlus_Guidebook_EN.pdf">TI guidebook</a></p>
       </div>
@@ -3249,6 +3249,28 @@
     const keyboard = document.getElementById("keyboard");
     const displayMain = document.getElementById("displayMain");
     const displayLabel = document.getElementById("displayLabel");
+    function fitDisplay() {
+      // Keep all digits visible, including long currency answers at DEC=4/8.
+      // Reset first so a shorter answer returns to the normal responsive size.
+      displayMain.style.fontSize = "";
+      const width = displayMain.clientWidth;
+      if (!width || displayMain.scrollWidth <= width) return;
+      const normalSize = parseFloat(getComputedStyle(displayMain).fontSize);
+      let size = Math.max(12, Math.floor(normalSize * width / displayMain.scrollWidth));
+      displayMain.style.fontSize = `${size}px`;
+      while (displayMain.scrollWidth > width && size > 12) {
+        displayMain.style.fontSize = `${--size}px`;
+      }
+    }
+    let displayWidth = 0;
+    new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width !== displayWidth) {
+        displayWidth = entry.contentRect.width;
+        fitDisplay();
+      }
+    }).observe(displayMain.parentElement);
+    window.addEventListener("resize", fitDisplay);
+    document.fonts.ready.then(fitDisplay);
     const displayMode = document.getElementById("displayMode");
     const displayStatus = document.getElementById("displayStatus");
     const indicators = document.getElementById("indicators");
@@ -3373,6 +3395,7 @@
       pyBadge.textContent = `P/Y ${state.tvm.PY} · C/Y ${state.tvm.CY}`;
       displayMain.textContent = state.display.main;
       displayLabel.textContent = state.display.label;
+      fitDisplay();
       displayMode.textContent = state.display.mode;
       displayStatus.textContent = state.display.status || "";
       const active = new Set(state.display.indicators.map((item) => item.toUpperCase()));
