@@ -482,7 +482,17 @@
 
     .calculator-wrap {
       display: flex;
+      flex-direction: column;
+      align-items: center;
       justify-content: center;
+    }
+
+    .worksheet-help {
+      width: min(100%, 440px);
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
     }
 
     .calculator {
@@ -816,7 +826,7 @@
     <section class="rail">
       <div class="panel">
         <h1>BA II Plus Simulator</h1>
-        <p class="small">Updated 21 September 2026 · 修正版 v2</p>
+        <p class="small">Updated 22 September 2026 · 修正版 v3</p>
         <p class="small">Companion to SUFE Corporate Finance, lectures 4–5. House rule: keep <b>P/Y = C/Y = 1</b>, type the <em>periodic</em> rate into I/Y (in percent), and let N be the number of periods. Cash outflows are negative.</p>
         <p class="small" style="margin-top:10px;">Start with <b>Example 0</b> (reset + P/Y = 1), then the present value, LiSi's loan, the monthly stream, the two remaining keys, and finally ZhangSan's car. <a class="source-link" href="https://education.ti.com/download/en/ed-tech/ADF11FB65B284B6195B0A7E9502784BA/D6C5319FCAE345CEABCDF34B1B11F01D/BAIIPlus_Guidebook_EN.pdf">TI guidebook</a></p>
       </div>
@@ -922,6 +932,7 @@
           <button class="key" data-key="=" data-second="ANS"><span class="primary">=</span></button>
         </div>
       </section>
+      <div class="mode-hint worksheet-help" id="worksheetHelp" role="status" hidden></div>
     </main>
 
     <section class="rail">
@@ -1018,6 +1029,7 @@
       this.hyperbolicTrig = false;
       this.lastAnswer = 0;
       this.error = "";
+      this.worksheetClearCount = 0;
       this.settings = {
         decimals: 2,
         angle: "DEG",
@@ -1142,6 +1154,7 @@
 
     press(rawKey) {
       const key = this.normalizeKey(rawKey);
+      if (key !== "CE/C" || this.second || this.mode === "standard") this.worksheetClearCount = 0;
 
       if (!this.power && key !== "ON/OFF") return this.display;
       if (key === "ON/OFF") return this.togglePower();
@@ -1167,7 +1180,11 @@
       if (key === "UP") return this.move(-1);
       if (key === "DOWN") return this.move(1);
       if (key === "RIGHT") return this.backspaceEntry();
-      if (key === "CE/C") return this.clearEntry();
+      if (key === "CE/C") {
+        // TI support article 11231: three consecutive CE/C presses exit a worksheet.
+        if (this.mode !== "standard" && ++this.worksheetClearCount >= 3) return this.quit();
+        return this.clearEntry();
+      }
       if (key === "+/-") return this.toggleSign();
 
       if (["+", "-", "x", "/", "y^x", "nCr", "nPr"].includes(key)) {
@@ -1296,6 +1313,7 @@
     }
 
     quit() {
+      this.worksheetClearCount = 0;
       this.mode = "standard";
       this.modeIndex = 0;
       this.cpt = false;
@@ -1451,7 +1469,7 @@
       }
       // Guidebook, "Clearing Calculator Entries and Memories": inside a prompted
       // worksheet CE/C only clears the value keyed in but not entered and shows the
-      // previous value again. Leaving the worksheet is 2ND QUIT.
+      // previous value again. Exit with 2ND QUIT or three consecutive CE/C presses.
       this.resetStandard();
       this.entryText = "0";
       this.entering = false;
@@ -3230,6 +3248,7 @@
     const formulaPanel = document.getElementById("formulaPanel");
     const keyTape = document.getElementById("keyTape");
     const modeHint = document.getElementById("modeHint");
+    const worksheetHelp = document.getElementById("worksheetHelp");
     const keyHistory = [];
     let cptArmedBefore = false;
 
@@ -3356,6 +3375,7 @@
         : '<span class="small">No keys pressed yet.</span>';
       const hints = {
         "STANDARD": "Standard mode uses BA II Plus chain logic. Use FORMAT to switch to AOS only when you want operator precedence.",
+        "FORMAT": "输入小数位数后按 ENTER 保存，再按 2ND → CPT (QUIT) 返回计算。CE/C 单次清除输入；连续三次退出。",
         "TVM": "TVM stores N, I/Y, PV, PMT, and FV. Enter known values first, then press CPT and the unknown variable.",
         "P/Y": "本课程使用 P/Y = C/Y = 1，I/Y 输入每期利率（百分数），N 输入期数。若使用 P/Y = C/Y = 12，I/Y 应输入按月复利的年名义利率，不要再除以 12。",
         "CASH FLOW": "Cash-flow worksheet alternates Cnn and Fnn. Fnn is the frequency for repeated equal cash flows.",
@@ -3367,6 +3387,9 @@
         "MEMORY": "Memory worksheet shows M0 through M9. Enter a value and press ENTER to store it.",
       };
       modeHint.textContent = hints[state.display.mode] || "Use the up and down keys to inspect worksheet variables.";
+      worksheetHelp.hidden = !calc.power || calc.mode === "standard" || calc.pendingReset;
+      worksheetHelp.textContent = calc.mode === "format" ? hints.FORMAT
+        : "退出当前工作表：2ND → CPT (QUIT)，或连续按三次 CE/C。已保存的设置和数值会保留。";
     }
 
     function fmt(value) {
