@@ -1050,7 +1050,7 @@
       <h1>BA II Plus Simulator</h1>
       <p class="subtitle">Companion to SUFE Corporate Finance, lectures 4–5</p>
     </div>
-    <span class="version-pill">Updated 23 September 2026 · 修正版 v13</span>
+    <span class="version-pill">Updated 23 September 2026 · 修正版 v14</span>
     <button type="button" class="theme-toggle sound-toggle" id="soundToggle" aria-pressed="true" aria-label="Key click sound and vibration" title="Key sound and vibration">
       <svg class="icon-sound-on" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
       <svg class="icon-sound-off" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 6 6M22 9l-6 6"/></svg>
@@ -1281,13 +1281,7 @@
       this.lastAnswer = 0;
       this.error = "";
       this.worksheetClearCount = 0;
-      this.settings = {
-        decimals: 2,
-        angle: "DEG",
-        date: "US",
-        separator: "US",
-        method: "CHN",
-      };
+      this.resetFormat();
       this.memory = Array(10).fill(0);
       this.resetStandard();
       this.resetTVM();
@@ -1306,6 +1300,16 @@
       this.entering = false;
       this.valueReady = false;
       this.display = this.makeDisplay({ value: 0, mode: "STANDARD" });
+    }
+
+    resetFormat() {
+      this.settings = {
+        decimals: 2,
+        angle: "DEG",
+        date: "US",
+        separator: "US",
+        method: "CHN",
+      };
     }
 
     resetStandard() {
@@ -1596,6 +1600,12 @@
       this.valueReady = false;
       this.entryText = "0";
       this.cpt = false;
+      // Guidebook, "Resetting Default Values": 2ND CLR WORK with a format
+      // displayed resets all calculator formats, not only the one shown.
+      if (this.mode === "format") {
+        this.resetFormat();
+        return this.showFormat();
+      }
       if (this.mode === "py") {
         this.tvm.PY = 1;
         this.tvm.CY = 1;
@@ -2362,8 +2372,9 @@
     computeAmort() {
       const i = this.periodicRate();
       const decimals = this.settings.decimals === 9 ? 10 : this.settings.decimals;
+      // Guidebook appendix: bal(0) = RND(PV), and every period uses RND(PMT).
       const payment = roundTo(this.tvm.PMT, decimals);
-      let balance = this.tvm.PV;
+      let balance = roundTo(this.tvm.PV, decimals);
       let principalSum = 0;
       let interestSum = 0;
       const p1 = Math.max(1, Math.round(this.amort.P1));
