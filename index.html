@@ -1044,7 +1044,7 @@
       <h1>BA II Plus Simulator</h1>
       <p class="subtitle">Companion to SUFE Corporate Finance, lectures 4–5</p>
     </div>
-    <span class="version-pill">Updated 23 September 2026 · 修正版 v9</span>
+    <span class="version-pill">Updated 23 September 2026 · 修正版 v10</span>
     <button type="button" class="theme-toggle sound-toggle" id="soundToggle" aria-pressed="true" aria-label="Key click sound and vibration" title="Key sound and vibration">
       <svg class="icon-sound-on" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
       <svg class="icon-sound-off" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 6 6M22 9l-6 6"/></svg>
@@ -4028,8 +4028,11 @@
 
     // ---------- Key feedback: click sound, phone vibration, and a small jolt ----------
     // The click is synthesised with Web Audio (no sound files, so the downloaded
-    // copy still works offline). It plays on pointerdown, as a real key clicks on
-    // the way down; the calculation itself still runs on the click event.
+    // copy still works offline). It is scheduled on pointerdown, as a real key clicks
+    // on the way down; the calculation itself still runs on the click event.
+    // iOS Safari only lets audio start on a gesture's completion (touchend, click,
+    // keydown), never on pointerdown, so those events unlock the context; a click
+    // scheduled while it was still locked plays as soon as it unlocks.
     const keyFeedback = (() => {
       const toggle = document.getElementById("soundToggle");
       const calculatorBody = document.querySelector(".calculator");
@@ -4048,9 +4051,23 @@
           const data = noise.getChannelData(0);
           for (let k = 0; k < data.length; k += 1) data[k] = (Math.random() * 2 - 1) * Math.pow(1 - k / data.length, 3);
         }
-        if (ctx.state === "suspended") ctx.resume();
         return ctx;
       }
+
+      function unlock() {
+        if (!enabled || (ctx && ctx.state === "running")) return;
+        const ac = audio();
+        if (!ac) return;
+        try {
+          ac.resume();
+          // A one-sample silent buffer started inside the gesture unlocks older iOS too.
+          const silent = ac.createBufferSource();
+          silent.buffer = ac.createBuffer(1, 1, ac.sampleRate);
+          silent.connect(ac.destination);
+          silent.start(0);
+        } catch {}
+      }
+      ["touchend", "click", "keydown"].forEach((type) => document.addEventListener(type, unlock, true));
 
       function click() {
         const ac = audio();
