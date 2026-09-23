@@ -324,6 +324,15 @@
 
     .rule p { margin: 0; }
 
+    .recipe {
+      margin: 0 0 12px;
+      padding-left: 20px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-2);
+    }
+    .recipe b { color: var(--text); }
+
     .hint {
       margin: 0 0 12px;
       padding: 8px 11px;
@@ -484,6 +493,22 @@
     .example-card.is-running {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .example-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .example-source {
+      flex: none;
+      padding: 1px 7px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 10.5px;
+      color: var(--text-3);
+      white-space: nowrap;
     }
 
     .example-title {
@@ -1048,9 +1073,9 @@
     </div>
     <div class="title-block">
       <h1>BA II Plus Simulator</h1>
-      <p class="subtitle">Companion to SUFE Corporate Finance, lectures 4–5</p>
+      <p class="subtitle">Companion to SUFE Corporate Finance</p>
     </div>
-    <span class="version-pill">Updated 23 September 2026 · 修正版 v14</span>
+    <span class="version-pill">Updated 23 September 2026 · 修正版 v15</span>
     <button type="button" class="theme-toggle sound-toggle" id="soundToggle" aria-pressed="true" aria-label="Key click sound and vibration" title="Key sound and vibration">
       <svg class="icon-sound-on" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
       <svg class="icon-sound-off" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 6 6M22 9l-6 6"/></svg>
@@ -1068,7 +1093,14 @@
           <span class="rule-tag">House rule</span>
           <p>Keep <b>P/Y = C/Y = 1</b>, type the <em>periodic</em> rate into I/Y (in percent), and let N be the number of periods. Cash outflows are negative.</p>
         </div>
-        <p class="small">Start with <b>Example 0</b> (reset + P/Y = 1), then the present value, LiSi's loan, the monthly stream, the two remaining keys, and finally ZhangSan's car. <a class="source-link" href="https://education.ti.com/download/en/ed-tech/ADF11FB65B284B6195B0A7E9502784BA/5DC3E70F3C8040E499D704B583646E1D/BA_II_PLUS_EN.pdf">TI guidebook</a></p>
+        <p class="small" style="margin-bottom:6px;"><b>Recipe for every TVM problem</b></p>
+        <ol class="recipe">
+          <li>Clear: <b>2ND CLR TVM</b>.</li>
+          <li>Check <b>P/Y = C/Y = 1</b> and END mode (no BGN on screen).</li>
+          <li>Enter the known values with signs: money you pay out is negative.</li>
+          <li><b>CPT</b>, then the key you want.</li>
+        </ol>
+        <p class="small">Start with <b>Example 0</b>, then work down the list. Each example states its problem; <b>Step ▶</b> walks through the keys. <a class="source-link" href="https://education.ti.com/download/en/ed-tech/ADF11FB65B284B6195B0A7E9502784BA/5DC3E70F3C8040E499D704B583646E1D/BA_II_PLUS_EN.pdf">TI guidebook</a></p>
       </div>
       <div class="panel">
         <h2>Examples</h2>
@@ -4200,6 +4232,7 @@
       {
         id: "setup",
         title: "0 · Always first — clear and P/Y = 1",
+        problem: "Before any problem: reset the calculator, then set P/Y = 1 so that I/Y is the rate per period and N counts periods.",
         steps: [
           { keys: ["2ND", "RESET", "ENTER"], note: "Reset worksheets. Do this when the calculator looks haunted." },
           { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT"], note: "House rule: P/Y = 1. I/Y will be the periodic percent; N is the number of periods." },
@@ -4207,7 +4240,9 @@
       },
       {
         id: "pv",
-        title: "1 · PV — $2,000 in 4 years at 6% (lecture 4)",
+        title: "1 · PV — $2,000 in 4 years at 6%",
+        problem: "You will receive $2,000 in four years. At 6% a year, what is that worth today?",
+        source: "Lecture 4",
         steps: [
           { keys: ["2ND", "CLR TVM"], note: "Clear TVM registers. Leftover FV from the last problem is the classic own-goal." },
           { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT"], note: "Recipe step 2: confirm P/Y = C/Y = 1. This is the current default, but a previous problem may have changed it. CLR TVM preserves these settings." },
@@ -4220,7 +4255,9 @@
       },
       {
         id: "lisi",
-        title: "2 · PMT — LiSi’s 20-year loan (lecture 4)",
+        title: "2 · PMT — LiSi’s 20-year loan",
+        problem: "LiSi borrows $1,000,000 at 5% a year and repays it with 20 equal year-end payments, the first due in one year. What is each payment?",
+        source: "Lecture 4",
         steps: [
           { keys: ["2ND", "CLR TVM"], note: "Clear TVM before a new problem." },
           { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT"], note: "Recipe step 2: confirm P/Y = 1." },
@@ -4233,7 +4270,9 @@
       },
       {
         id: "monthly",
-        title: "3 · Monthly stream — textbook Example 4.14 (lecture 4)",
+        title: "3 · Cash or $500 a month?",
+        problem: "A car costs $20,000 today, or $500 at the end of each month for 48 months. Your cash earns 0.5% per month. What are the payments worth today, and which option is cheaper?",
+        source: "Lecture 4 · Textbook Ex. 4.14",
         steps: [
           { keys: ["2ND", "CLR TVM"], note: "Clear TVM." },
           { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT"], note: "Confirm P/Y = 1. The monthly rate is given, so I/Y is the monthly percent." },
@@ -4246,7 +4285,9 @@
       },
       {
         id: "n-iy",
-        title: "4 · The other two keys — CPT N, then CPT I/Y (lecture 4)",
+        title: "4 · The other two keys — CPT N, then CPT I/Y",
+        problem: "You invest $1,000 today. (a) At 10% a year, how many years until it grows to $2,000? (b) What annual rate would double it in exactly six years?",
+        source: "Lecture 4",
         steps: [
           { keys: ["2ND", "CLR TVM"], note: "Clear TVM. $1,000 today grows to $2,000 at 10%: how long?" },
           { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT"], note: "Confirm P/Y = 1." },
@@ -4256,12 +4297,14 @@
           { keys: ["2", "0", "0", "0", "FV"], note: "FV = +2,000 (you receive)." },
           { keys: ["CPT", "N"], note: "N ≈ 7.27 years (ln 2 / ln 1.1). Year-end withdrawals: first year with $2,000 is Year 8." },
           { keys: ["6", "N"], note: "Now ask the other question: what rate turns $1,000 into $2,000 in six years? N = 6." },
-          { keys: ["CPT", "I/Y"], note: "I/Y ≈ 12.25 percent: 2^(1/6) − 1. The IRR of the investment (textbook §4.9)." },
+          { keys: ["CPT", "I/Y"], note: "I/Y ≈ 12.25 percent: 2^(1/6) − 1. This is the investment's internal rate of return (IRR)." },
         ],
       },
       {
         id: "car",
-        title: "5 · Preview of lecture 5 — ZhangSan's car, 60 months, 6.75% APR",
+        title: "5 · ZhangSan's car loan — 60 months at 6.75% APR",
+        problem: "ZhangSan borrows $30,000 for a car: 60 monthly payments at 6.75% APR, compounded monthly. What is the monthly payment?",
+        source: "Lecture 5",
         steps: [
           { keys: ["2ND", "CLR TVM"], note: "Clear TVM." },
           { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT"], note: "Confirm P/Y = 1 so I/Y is the monthly percent." },
@@ -4269,13 +4312,14 @@
           { keys: ["0", ".", "5", "6", "2", "5", "I/Y"], note: "I/Y = 6.75 / 12 = 0.5625 (monthly). Not 6.75." },
           { keys: ["3", "0", "0", "0", "0", "PV"], note: "PV = +30,000 (the loan, cash in)." },
           { keys: ["0", "FV"], note: "FV = 0." },
-          { keys: ["CPT", "PMT"], note: "PMT ≈ −590.50. Same number as lecture 5." },
+          { keys: ["CPT", "PMT"], note: "PMT ≈ −590.50 a month. Negative: ZhangSan pays." },
         ],
       },
       {
         id: "trap-clr",
         section: "Traps — what a wrong setup looks like",
         title: "T1 · Forgot CLR TVM: last problem's FV is still there",
+        problem: "What goes wrong if you skip 2ND CLR TVM between problems? Solve Example 1, then type LiSi's loan (Example 2) without clearing.",
         steps: [
           { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT", "2ND", "CLR TVM"], note: "Start clean: P/Y = 1, registers cleared." },
           { keys: ["4", "N", "6", "I/Y", "0", "PMT", "2", "0", "0", "0", "FV", "CPT", "PV"], note: "Example 1 again: PV = −1,584.19. Now FV = 2,000 sits in the machine." },
@@ -4287,6 +4331,7 @@
         id: "trap-py",
         section: "Traps — what a wrong setup looks like",
         title: "T2 · P/Y left at 12 after a monthly problem",
+        problem: "What happens if P/Y is still 12 from an earlier monthly problem? Rework LiSi's loan (Example 2) with that setting.",
         steps: [
           { keys: ["2ND", "RESET", "ENTER", "2ND", "P/Y", "1", "2", "ENTER", "2ND", "QUIT"], note: "Deliberately set P/Y = C/Y = 12, as if left over from a monthly-payment problem. CLR TVM will not reset these settings." },
           { keys: ["2ND", "CLR TVM", "2", "0", "N", "5", "I/Y", "1", "0", "0", "0", "0", "0", "0", "PV", "0", "FV", "CPT", "PMT"], note: "LiSi's loan with P/Y = 12: −52,216.30. The 5 was split into 5/12 percent per period: a 20-month loan at 0.42% a month." },
@@ -4297,9 +4342,10 @@
         id: "trap-bgn",
         section: "Traps — what a wrong setup looks like",
         title: "T3 · BGN left on",
+        problem: "$50,000 a year for 10 years at 8%, paid at the end of each year. What does forgetting BGN mode do to its present value?",
         steps: [
           { keys: ["2ND", "P/Y", "1", "ENTER", "2ND", "QUIT", "2ND", "CLR TVM"], note: "Start clean." },
-          { keys: ["1", "0", "N", "8", "I/Y", "5", "0", "0", "0", "0", "+/-", "PMT", "0", "FV", "CPT", "PV"], note: "Quiz 2: $50,000 a year for 10 years at 8%, ordinary: PV = 335,504.07." },
+          { keys: ["1", "0", "N", "8", "I/Y", "5", "0", "0", "0", "0", "+/-", "PMT", "0", "FV", "CPT", "PV"], note: "END mode (payments at year-end): PV = 335,504.07." },
           { keys: ["2ND", "BGN", "2ND", "SET", "2ND", "QUIT", "CPT", "PV"], note: "Same registers with BGN on: 362,344.40. Every payment moved one year earlier, so the loan is worth 8% more. Look for the BGN indicator before you press CPT." },
           { keys: ["2ND", "BGN", "2ND", "SET", "2ND", "QUIT", "CPT", "PV"], note: "SET again returns to END: 335,504.07." },
         ],
@@ -4311,7 +4357,8 @@
       {
         id: "p1",
         title: "P1 · Grow a lump sum",
-        problem: "$5,000 today grows at 8% a year. What is it worth in 10 years? (Review Quiz 1)",
+        problem: "$5,000 today grows at 8% a year. What is it worth in 10 years?",
+        source: "Review Quiz 1",
         solve: "FV",
         tvm: { N: 10, IY: 8, PV: -5000, PMT: 0, FV: 10794.62 },
         signNote: "you invest today, so PV and FV carry opposite signs",
@@ -4321,7 +4368,8 @@
       {
         id: "p2",
         title: "P2 · How much can he borrow?",
-        problem: "ZhangSan can pay $50,000 at the end of each year for 10 years. The borrowing rate is 8%. What loan can he take today? (Review Quiz 2)",
+        problem: "ZhangSan can pay $50,000 at the end of each year for 10 years. The borrowing rate is 8%. What loan can he take today?",
+        source: "Review Quiz 2",
         solve: "PV",
         tvm: { N: 10, IY: 8, PV: 335504.07, PMT: -50000, FV: 0 },
         signNote: "he receives the loan and pays the installments, so PV and PMT carry opposite signs",
@@ -4330,7 +4378,8 @@
       },
       {
         id: "p3",
-        title: "P3 · Deposit, then withdraw (textbook Example 4.13)",
+        title: "P3 · Deposit, then withdraw",
+        source: "Textbook Ex. 4.13",
         problem: "You put $20,000 in an account paying 8% and withdraw $2,000 at the end of each year for 15 years. How much is left after the 15th withdrawal?",
         solve: "FV",
         tvm: { N: 15, IY: 8, PV: -20000, PMT: 2000, FV: 9139.15 },
@@ -4340,7 +4389,8 @@
       },
       {
         id: "p4",
-        title: "P4 · A monthly rate, given (textbook §4.7)",
+        title: "P4 · A monthly rate, given",
+        source: "Textbook §4.7",
         problem: "A credit card charges 2% per month. You owe $1,000 today and make no payments for six months. What is the balance then?",
         solve: "FV",
         tvm: { N: 6, IY: 2, PV: 1000, PMT: 0, FV: -1126.16 },
@@ -4421,7 +4471,7 @@
         const fb = st.feedback;
         return `
           <div class="example-card" data-practice="${ex.id}">
-            <div class="example-title">${ex.title}</div>
+            <div class="example-head"><div class="example-title">${ex.title}</div>${ex.source ? `<span class="example-source">${ex.source}</span>` : ""}</div>
             <div class="practice-problem">${ex.problem}</div>
             ${st.hint ? `<div class="example-note"><b>Hint.</b> ${ex.hint}</div>` : ""}
             <div class="practice-feedback${fb ? (fb.ok ? " ok" : " bad") : ""}"${fb ? "" : " hidden"}>${fb ? fb.text : ""}</div>
@@ -4464,7 +4514,8 @@
         const done = s.i >= total;
         return `${heading}
           <div class="example-card${s.i > 0 && !done ? " is-running" : ""}" data-example="${ex.id}">
-            <div class="example-title">${ex.title}</div>
+            <div class="example-head"><div class="example-title">${ex.title}</div>${ex.source ? `<span class="example-source">${ex.source}</span>` : ""}</div>
+            <div class="practice-problem">${ex.problem}</div>
             <div class="example-note">${note}</div>
             <div class="example-progress">step ${s.i} / ${total}${done ? " — finished" : ""}</div>
             <div class="example-actions">
