@@ -1050,7 +1050,7 @@
       <h1>BA II Plus Simulator</h1>
       <p class="subtitle">Companion to SUFE Corporate Finance, lectures 4–5</p>
     </div>
-    <span class="version-pill">Updated 23 September 2026 · 修正版 v12</span>
+    <span class="version-pill">Updated 23 September 2026 · 修正版 v13</span>
     <button type="button" class="theme-toggle sound-toggle" id="soundToggle" aria-pressed="true" aria-label="Key click sound and vibration" title="Key sound and vibration">
       <svg class="icon-sound-on" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
       <svg class="icon-sound-off" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 6 6M22 9l-6 6"/></svg>
@@ -4047,15 +4047,6 @@
       try { enabled = localStorage.getItem("baii-sound") !== "off"; } catch {}
       let ctx = null;
       let noise = null;
-      // Diagnostics for devices we cannot test from here: open the page with
-      // ?debug=feedback to see the audio state and a log of each tap.
-      const debug = /[?&]debug=feedback\b/.test(location.search);
-      const log = [];
-      function dbg(message) {
-        if (!debug) return;
-        log.push(`${(performance.now() / 1000).toFixed(2)}s ${message}`);
-        if (log.length > 14) log.shift();
-      }
 
       function audio() {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -4069,20 +4060,18 @@
         return ctx;
       }
 
-      function unlock(event) {
+      function unlock() {
         if (!enabled || (ctx && ctx.state === "running")) return;
         const ac = audio();
         if (!ac) return;
-        dbg(`unlock on ${event.type}: state ${ac.state}`);
         try {
-          const resumed = ac.resume();
-          if (debug && resumed) resumed.then(() => dbg(`resume ok → ${ac.state}`), (e) => dbg(`resume rejected: ${e}`));
+          ac.resume();
           // A one-sample silent buffer started inside the gesture unlocks older iOS too.
           const silent = ac.createBufferSource();
           silent.buffer = ac.createBuffer(1, 1, ac.sampleRate);
           silent.connect(ac.destination);
           silent.start(0);
-        } catch (e) { dbg(`unlock error: ${e}`); }
+        } catch {}
       }
       ["touchend", "click", "keydown"].forEach((type) => document.addEventListener(type, unlock, true));
 
@@ -4134,8 +4123,9 @@
       function press() {
         jolt();
         if (!enabled) return;
-        try { click(); dbg(`click scheduled: state ${ctx && ctx.state}`); } catch (e) { dbg(`click error: ${e}`); }
-        // Android browsers vibrate; iOS Safari and desktops ignore or lack this.
+        try { click(); } catch {}
+        // Android browsers vibrate. iOS Safari has no vibration API; its switch-haptic
+        // workaround was tried and rejected as too rough, so iPhones get sound and jolt.
         try { if (navigator.vibrate) navigator.vibrate(8); } catch {}
       }
 
@@ -4145,55 +4135,6 @@
         try { localStorage.setItem("baii-sound", on ? "on" : "off"); } catch {}
       }
 
-
-      if (debug) {
-        const box = document.createElement("div");
-        box.style.cssText = "position:fixed;left:8px;right:8px;bottom:8px;z-index:999;padding:10px;border-radius:10px;background:rgba(0,0,0,.86);color:#E6F4EE;font:11px/1.4 ui-monospace,Menlo,monospace;max-height:45vh;overflow:auto";
-        box.innerHTML = '<div id="fbStatus"></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">'
-          + '<button type="button" data-test="tone">Tone</button>'
-          + '<button type="button" data-test="loud">Tone (ignores Silent)</button>'
-          + '<button type="button" data-test="haptic">iPhone vibration test</button></div><pre id="fbLog" style="margin:0;white-space:pre-wrap"></pre>';
-        document.body.appendChild(box);
-        const tone = () => {
-          const ac = audio();
-          if (!ac) return dbg("no AudioContext support");
-          const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
-          o.frequency.value = 660;
-          g.gain.setValueAtTime(0.3, t);
-          g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
-          o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + 0.45);
-          dbg(`tone started: state ${ac.state}, session ${navigator.audioSession ? navigator.audioSession.type : "n/a"}`);
-        };
-        box.addEventListener("click", (event) => {
-          const test = event.target.dataset && event.target.dataset.test;
-          try {
-            if (test === "tone") tone();
-            if (test === "loud") {
-              if (navigator.audioSession) navigator.audioSession.type = "playback";
-              else dbg("navigator.audioSession not available");
-              tone();
-            }
-            if (test === "haptic") {
-              const label = document.createElement("label");
-              const input = document.createElement("input");
-              input.type = "checkbox";
-              input.setAttribute("switch", "");
-              label.appendChild(input);
-              label.style.display = "none";
-              document.body.appendChild(label);
-              label.click();
-              label.remove();
-              dbg("haptic test fired (feel for a tap)");
-            }
-          } catch (e) { dbg(`test error: ${e}`); }
-        });
-        const ios = (navigator.userAgent.match(/OS (\d+)[._](\d+)/) || []).slice(1).join(".") || "not iOS";
-        setInterval(() => {
-          document.getElementById("fbStatus").textContent =
-            `iOS ${ios} · audio ${ctx ? ctx.state : "not created"} · sound ${enabled ? "on" : "off"} · session ${navigator.audioSession ? navigator.audioSession.type : "n/a"} · vibrate API ${"vibrate" in navigator ? "yes" : "no"}`;
-          document.getElementById("fbLog").textContent = log.join("\n");
-        }, 250);
-      }
 
       setEnabled(enabled);
       toggle.addEventListener("click", () => {
